@@ -31,3 +31,8 @@ comunicarea ESP-> Raspberry (am folosit urmatorul tutorial: https://www.youtube.
 -!atentie: doar una din functiile "input_and_send()" sau "rx_and_echo()" sa putea fi vizibila, cealalta se va comenta
 -trebuie deschis un serial monitor din Arduino IDE pentru a se realiza conectarea
 
+pentru a functiona ecranul LCD trebuie sa ne instalam o biblioteca
+-am descarcat arhiva "https://github.com/johnrickman/LiquidCrystal_I2C"
+-am adaugat biblioteca manual de la 
+	Sketch -> Include Library -> Add .zip Library
+
