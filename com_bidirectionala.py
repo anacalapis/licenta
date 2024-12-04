@@ -1,3 +1,4 @@
+import serial
 from bluetooth import *
 
 def input_and_send():
@@ -9,12 +10,16 @@ def input_and_send():
 		sock.send("\n")
 	
 def rx_and_echo():
-	sock.send("\nESP -> Raspberry")
+	#sock.send("\nESP -> Raspberry")
 	while True:
 		data = sock.recv(buf_size)
 		if data:
+			#print(data)
+			data = data.decode("utf-8")
 			print(data)
-			sock.send(data)
+			ser.write(data.encode("utf-8"))
+			#sock.send(data)
+	
 			
 addr= "A0:A3:B3:97:55:46"
 service_matches = find_service( address = addr )
@@ -40,6 +45,8 @@ host = first_match["host"]
 # Create the client socket
 sock=BluetoothSocket( RFCOMM )
 sock.connect((host, port))
+
+ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
 #input_and_send()
 rx_and_echo()
