@@ -4,8 +4,6 @@
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
-const int resumeButton = 12;
-
 // Variabile de stare
 volatile bool isPaused = false; // Flag pentru pauză
 unsigned long previousMillis = 0; // Timpul anterior pentru actualizarea countdown-ului
@@ -27,10 +25,7 @@ void setup()
   lcd.backlight();
   lcd.setCursor(0, 0);
   lcd.print("Start meci!");
-  
-  pinMode(resumeButton, INPUT_PULLUP); 
-
-  delay(2000); 
+  delay(500); 
   lcd.clear();
 }
 
@@ -117,24 +112,29 @@ void displayQuarter()
     lcd.setCursor(0, 1);
     lcd.print("00:");
     lcd.print(timeQuarter);
-    while(digitalRead(resumeButton) == HIGH);
+    command = Serial.readStringUntil('\n');
+    command.trim();
+    while(command.equals("") || command.equals("1"))
+    {
+      command = Serial.readStringUntil('\n');
+      command.trim();
+    }
   }
   while(countDownTime !=0)
   {
     command = Serial.readStringUntil('\n');
     command.trim();
-    Serial.print(command);
     //if (digitalRead(pauseButton) == LOW)
-    if(command.equals("1" ))
+    if(command.equals("1"))
     {
       isPaused = true; // Oprește timpul 
-      delay(200);
+      delay(100);
     }
 
-    if (digitalRead(resumeButton) == LOW) 
+    if (command.equals("0")) 
     {
       isPaused = false; // Reia timpul
-      delay(200); 
+      delay(100); 
     }
     if (!isPaused) 
     {
