@@ -114,7 +114,7 @@ void displayQuarter()
     lcd.print(timeQuarter);
     command = Serial.readStringUntil('\n');
     command.trim();
-    while(command.equals("") || command.equals("1"))
+    while(!(command.equals("0")))
     {
       command = Serial.readStringUntil('\n');
       command.trim();
