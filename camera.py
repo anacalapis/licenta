@@ -1,8 +1,23 @@
 import depthai as dai
 import cv2 
 import numpy as np
+
+orange = [0, 165, 255]
 # Creăm un pipeline DepthAI
 pipeline = dai.Pipeline()
+
+def get_limits(color):
+    c = np.uint8([[color]])
+    hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
+    
+    lowerLimit = hsvC[0][0][0] -10, 100, 100
+    upperLimit = hsvC[0][0][0] +10, 255, 255
+    
+    lowerLimit = np.array(lowerLimit, dtype=np.uint8)
+    upperLimit = np.array(upperLimit, dtype=np.uint8)
+    
+    return lowerLimit, upperLimit 
+    
 
 prevCircle = None #circle from the previous frame
 dist = lambda x1,y1,x2,y2: (x1-x2)**2+(y1-y2)**2
@@ -27,11 +42,16 @@ while True:
     # Citim frame-urile RGB din coadă
     in_rgb = q_rgb.get()
     frame = in_rgb.getCvFrame()
-
-    grayFrame =  cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-    blurFrame = cv2.GaussianBlur(grayFrame, (17,17), 0)    #cu cat pui mai mult la 17, cu atat va deveni imaginea mai blured
     
-    circles= cv2.HoughCircles(blurFrame, cv2.HOUGH_GRADIENT, 1.2, 100, param1=100, param2=30, minRadius=75, maxRadius=400)
+    hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    lowerLimit, upperLimit = get_limits(color=orange)
+    mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
+    #cv2.imshow("OAK-D Lite RGB", mask)
+    
+    #grayFrame =  cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #blurFrame = cv2.GaussianBlur(grayFrame, (17,17), 0)    #cu cat pui mai mult la 17, cu atat va deveni imaginea mai blured
+    
+    circles= cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1.2, 120, param1=120, param2=30, minRadius=15, maxRadius=300)
     if circles is not None:
         circles = np.uint16(np.around(circles))
         chosen = None
