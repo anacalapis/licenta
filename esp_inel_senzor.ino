@@ -1,34 +1,41 @@
-#define SENSOR1_PIN 22 // Pinul pentru primul receptor IR
-#define SENSOR2_PIN 23 // Pinul pentru al doilea receptor IR
+#include <BluetoothSerial.h>
+#define SENSOR1_PIN 22 
+#define SENSOR2_PIN 23 
+#define SENSOR3_PIN 18
+
+BluetoothSerial SerialBT;
 
 int score = 0;
 int sensor1State= 1;
 int sensor2State= 1;
+int sensor3State= 1;
 void setup() {
-  pinMode(SENSOR1_PIN, INPUT_PULLUP); // Configurează primul pin ca intrare
-  pinMode(SENSOR2_PIN, INPUT_PULLUP); // Configurează al doilea pin ca intrare
-  Serial.begin(9600);        // Inițializează Monitorul Serial
+  pinMode(SENSOR1_PIN, INPUT_PULLUP); 
+  pinMode(SENSOR2_PIN, INPUT_PULLUP); 
+  pinMode(SENSOR3_PIN, INPUT_PULLUP);
+  Serial.begin(9600);     
 }
 
 void loop() {
   sensor1State = digitalRead(SENSOR1_PIN); 
-
-  if (sensor1State == 0)
+  sensor3State = digitalRead(SENSOR3_PIN); 
+  if (sensor1State == 0 || sensor3State==0)
   {
-    delay(30);
+    delay(50);
     sensor2State = digitalRead(SENSOR2_PIN);
     if(sensor2State == 0)
     { 
       score++;
     }
-    Serial.print("        senz2 ");
-  Serial.print(sensor2State);
-
+    Serial.print(sensor2State);
   }
-  Serial.print("senz1 ");
-  Serial.print(sensor1State);
-  
-  Serial.print("        score ");
-  Serial.println(score);
+  // Serial.print("senz1 ");
+  //Serial.print(sensor1State);
+  // Serial.print("senz2 ");
+  // Serial.print(sensor2State);
+  // Serial.print("senz3 ");
+  //Serial.println(sensor3State);
+  //Serial.print("        score ");
+  SerialBT.print(score);
   delay(50); 
 }
