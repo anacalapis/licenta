@@ -14,6 +14,7 @@ void setup() {
   pinMode(SENSOR2_PIN, INPUT_PULLUP); 
   pinMode(SENSOR3_PIN, INPUT_PULLUP);
   Serial.begin(9600);     
+  SerialBT.begin("ESP_Inel_Device");
 }
 
 void loop() {
@@ -27,7 +28,7 @@ void loop() {
     { 
       score++;
     }
-    Serial.print(sensor2State);
+    //Serial.print(sensor2State);
   }
   // Serial.print("senz1 ");
   //Serial.print(sensor1State);
