@@ -1,55 +1,69 @@
-import serial
 from bluetooth import *
+import serial
+import threading
 
-def input_and_send():
-	print("\n Raspberry -> ESP32\n")
-	while True:
-		data = input()
-		if len(data) == 0: break
-		sock.send(data)
-		sock.send("\n")
-	
-def rx_and_echo():
-	#sock.send("\nESP -> Raspberry")
-	while True:
-		data = sock.recv(buf_size)
-		if data:
-			#print(data)
-			data = data.decode("utf-8")
-			print(data)
-			ser.write(data.encode("utf-8"))
-			#sock.send(data)
-	
-			
-addr= "A0:A3:B3:97:55:46"
-service_matches = find_service( address = addr )
+buf_size = 1024
 
-buf_size = 1024;
+# Adresele ESP32
+addr_esp1 = "A0:A3:B3:97:55:46" #fluier
+addr_esp2 = "A0:A3:B3:96:69:6A" #inel
 
-
-if len(service_matches) == 0:
-    print("couldn't find the SampleServer service =(")
-    sys.exit(0)
-    
-#for s in range (len(service_matches)):
-#	print("\nservice_matches[" + str(s) + "]:")
-#	print(service_matches[s])
-	
-first_match = service_matches[0]
-port = first_match["port"]
-name = first_match["name"]
-host = first_match["host"]
-
-#print("connecting to \"%s\" on %s" % (name, host))
-
-# Create the client socket
-sock=BluetoothSocket( RFCOMM )
-sock.connect((host, port))
+data_sock0 = ""
+data_sock1 = ""
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
-#input_and_send()
-rx_and_echo()
+# Funcție pentru conectarea unui dispozitiv
+def connect_to_esp(addr):
+    service_matches = find_service(address=addr)
+    if len(service_matches) == 0:
+        print(f"Couldn't find the SampleServer service for {addr} =(")
+        return None
 
-sock.close()
+    first_match = service_matches[0]
+    port = first_match["port"]
+    host = first_match["host"]
 
+    sock = BluetoothSocket(RFCOMM)
+    sock.connect((host, port))
+    print(f"Connected to {addr}")
+    return sock
+
+# Funcție pentru recepția datelor de la un ESP32
+def rx_and_echo(sock, identifier):
+    while True:
+        data = sock.recv(buf_size)
+        if data:
+            data = data.decode("utf-8")
+            #print(f"{identifier}{data}")
+            formatted_data = f"{identifier}{data}\n"
+            ser.write(formatted_data.encode("utf-8"))
+
+	
+# Conectare la ESP32-urile
+sock1 = connect_to_esp(addr_esp1) #fluier
+sock2 = connect_to_esp(addr_esp2) #inel
+
+# Asigură-te că ambele conexiuni sunt valide
+if sock1 is None or sock2 is None:
+    print("Failed to connect to one or both ESP32 devices.")
+    exit(1)
+
+
+# Creează fire de execuție pentru fiecare ESP32
+thread1 = threading.Thread(target=rx_and_echo, args=(sock1, 0))  # fluier
+thread2 = threading.Thread(target=rx_and_echo, args=(sock2, 1))  # inel
+
+
+thread1.start()
+thread2.start()
+
+
+
+# Așteaptă terminarea firelor
+thread1.join()
+thread2.join()
+
+# Închide conexiunile
+sock1.close()
+sock2.close()
