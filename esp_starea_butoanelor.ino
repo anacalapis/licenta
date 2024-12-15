@@ -20,14 +20,27 @@ void loop() {
   int resume_button = digitalRead(RESUME_BUTTON);
 
   // Trimite starea butonului la Raspberry Pi prin Bluetooth
-  if (microphone == HIGH && flag==1) {
-    SerialBT.print(1);
-    flag=0;
-  } 
-  if (resume_button == LOW) {
-    SerialBT.print(0);
-    flag=1;
-  } 
+  // if (microphone == HIGH && flag==1) {
+  //   SerialBT.print(1);
+  //   flag=0;
+  // } 
+  // if (resume_button == LOW) {
+  //   SerialBT.print(0);
+  //   flag=1;
+  // } 
+  if(microphone == HIGH)
+  {
+    SerialBT.print("1");
+  }
+  else 
+  {
+    if (resume_button == LOW) 
+    {
+      SerialBT.print("0");
+    }
+    else
+      SerialBT.print("2");
+  }
 
-  delay(200);
+  delay(50);
 }

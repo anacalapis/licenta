@@ -18,6 +18,8 @@ int timeSmallBreak =5;
 int timeHalfBreak = 7; 
 String command;
 
+String scor = "0";
+
 void setup() 
 {
   Serial.begin(9600);
@@ -30,7 +32,7 @@ void setup()
 }
 
 void loop() {
- 
+  
   displayQuarter();
   if (countDownTime <= 0) 
   {
@@ -77,15 +79,15 @@ void updateDisplay(int sfert)
   lcd.setCursor(0, 0);
   if(sfert == 0)
   {
-    lcd.print("Pauza:");
+    lcd.print("Pauza:  ");
   }
   else
   {
-    lcd.print("Sfertul ");
+    lcd.print("Sf ");
     lcd.print(sfert);
-    lcd.print(":");
+    lcd.print(":   ");
   }
-  lcd.setCursor(0, 1);
+  //lcd.setCursor(0, 1);
 
   if (minutes < 10) 
   {
@@ -98,23 +100,25 @@ void updateDisplay(int sfert)
     lcd.print("0");
   }
   lcd.print(seconds);
+  displayScor();
 }
 
 void displayQuarter()
 {
+  Serial.println("S");
   if(countDownTime==10)
   {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Sfertul ");
+    lcd.print("Sf ");
     lcd.print(nr_sfert);
-    lcd.print(":");
-    lcd.setCursor(0, 1);
-    lcd.print("00:");
+    lcd.print("   00:");
     lcd.print(timeQuarter);
+    displayScor();
     command = Serial.readStringUntil('\n');
     command.trim();
-    while(!(command.equals("0")))
+    
+    while(!command.equals("00"))
     {
       command = Serial.readStringUntil('\n');
       command.trim();
@@ -122,17 +126,19 @@ void displayQuarter()
   }
   while(countDownTime !=0)
   {
+
     command = Serial.readStringUntil('\n');
     command.trim();
     //if (digitalRead(pauseButton) == LOW)
-    if(command.equals("1"))
+    if(command.equals("01"))
     {
       isPaused = true; // Oprește timpul 
       delay(100);
     }
-
-    if (command.equals("0")) 
+    
+    if (command.equals("00")) 
     {
+      
       isPaused = false; // Reia timpul
       delay(100); 
     }
@@ -151,14 +157,15 @@ void displayQuarter()
 
 void displayPause()
 {
+  Serial.println("P");
   if(countDownTime==timeSmallBreak || countDownTime==timeHalfBreak)
   {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Pauza:");
-    lcd.setCursor(0, 1);
-    lcd.print("00:0");
+    lcd.print("Pauza 00:0");
     lcd.print(countDownTime);
+    displayScor();
+
   }
   while(countDownTime!=0)
   {
@@ -170,4 +177,29 @@ void displayPause()
         updateDisplay(0);
       }
   }
+}
+
+void displayScor()
+{
+  lcd.setCursor(0, 1);
+  lcd.print("Scor  ");
+  command = Serial.readStringUntil('\n');
+  command.trim();
+  //lcd.print(command);
+  if(command.startsWith("1"))
+  {
+    scor = command.substring(1);
+    lcd.print(scor);
+  }
+  else
+  {
+    lcd.print(scor);
+  }
+  
+  // else
+  // {
+  //   command = Serial.readStringUntil('\n');
+  //   command.trim();
+  //   lcd.print(command.substring(1));
+  // }
 }

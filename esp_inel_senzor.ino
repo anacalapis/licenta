@@ -5,6 +5,9 @@
 
 BluetoothSerial SerialBT;
 
+String command = "";
+bool flag;
+
 int score = 0;
 int sensor1State= 1;
 int sensor2State= 1;
@@ -13,14 +16,31 @@ void setup() {
   pinMode(SENSOR1_PIN, INPUT_PULLUP); 
   pinMode(SENSOR2_PIN, INPUT_PULLUP); 
   pinMode(SENSOR3_PIN, INPUT_PULLUP);
-  Serial.begin(9600);     
-  SerialBT.begin("ESP_Inel_Device");
+  Serial.begin(9600);    
+  SerialBT.begin("ESP_Inel_Device"); 
 }
 
 void loop() {
   sensor1State = digitalRead(SENSOR1_PIN); 
-  sensor3State = digitalRead(SENSOR3_PIN); 
-  if (sensor1State == 0 || sensor3State==0)
+  sensor3State = digitalRead(SENSOR3_PIN);
+  while (SerialBT.available()) {
+    char c = SerialBT.read();  // Citim câte un caracter
+    if (c == '\n') {  // Dacă am primit un caracter de sfârșit de linie, procesăm comanda
+      command.trim();  // Eliminăm orice spațiu sau \n la începutul și sfârșitul comenzii
+      if (command.equals("S")) {
+        flag = true;
+        Serial.println("Received S");
+      }
+      else if (command.equals("P")) {
+        flag = false;
+        Serial.println("Received P");
+      }
+      command = "";  // Resetăm comanda pentru următoarea citire
+    } else {
+      command += c;  // Adăugăm caracterul la comanda curentă
+    }
+  }
+  if ((sensor1State == 0 || sensor3State==0) && flag)
   {
     delay(50);
     sensor2State = digitalRead(SENSOR2_PIN);
@@ -37,6 +57,6 @@ void loop() {
   // Serial.print("senz3 ");
   //Serial.println(sensor3State);
   //Serial.print("        score ");
-  SerialBT.print(score);
+  SerialBT.printf("%d", score);
   delay(50); 
 }
