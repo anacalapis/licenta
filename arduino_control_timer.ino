@@ -105,7 +105,7 @@ void updateDisplay(int sfert)
 
 void displayQuarter()
 {
-  Serial.println("S");
+  //Serial.println("S");
   if(countDownTime==10)
   {
     lcd.clear();
@@ -132,13 +132,14 @@ void displayQuarter()
     //if (digitalRead(pauseButton) == LOW)
     if(command.equals("01"))
     {
+      Serial.println("P");
       isPaused = true; // Oprește timpul 
       delay(100);
     }
     
     if (command.equals("00")) 
     {
-      
+      Serial.println("S");
       isPaused = false; // Reia timpul
       delay(100); 
     }
