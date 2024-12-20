@@ -2,7 +2,10 @@ import depthai as dai
 import cv2 
 import numpy as np
 
-orange = [0, 165, 255]
+orange = [0, 118, 255]
+font = cv2.FONT_HERSHEY_SIMPLEX
+frontScale = 0.6
+color = (0,0,255)
 # Creăm un pipeline DepthAI
 pipeline = dai.Pipeline()
 
@@ -51,18 +54,24 @@ while True:
     #grayFrame =  cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #blurFrame = cv2.GaussianBlur(grayFrame, (17,17), 0)    #cu cat pui mai mult la 17, cu atat va deveni imaginea mai blured
     
-    circles= cv2.HoughCircles(mask, cv2.HOUGH_GRADIENT, 1.2, 120, param1=120, param2=30, minRadius=15, maxRadius=300)
-    if circles is not None:
-        circles = np.uint16(np.around(circles))
-        chosen = None
-        for i in circles[0, :]:
-            if chosen is None: chosen =i
-            if prevCircle is not None: 
-                if dist(chosen[0],chosen[1],prevCircle[0],prevCircle[1])<= dist(i[0],i[1],prevCircle[0],prevCircle[1]):
-                    chosen= i
-        cv2.circle(frame, (chosen[0],chosen[1]), 1, (0,100,100),3)
-        cv2.circle(frame, (chosen[0],chosen[1]), chosen[2], (255,0,255),3)
-        prevCircle = chosen
+    d_img = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), 'uint8'), iterations = 5)
+    cont,hei = cv2.findContours(d_img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    cont = sorted(cont, key = cv2.contourArea , reverse = True)[:1]
+    for cnt in cont:
+        if (cv2.contourArea(cnt)>100 and cv2.contourArea(cnt)<306000):
+            rect = cv2.minAreaRect(cnt)
+            box = cv2.boxPoints(rect)
+            box = np.int0(box)
+            cv2.drawContours(frame,[box], -1, (255,0,0) ,3)
+            
+            pixels = rect[1][0]
+            print(pixels)
+            #dist = (width*focal)/pixels
+            dist = (6*819)/pixels
+            img = cv2.putText(frame, 'distance', (0, 20) , font, 1, color, 2, cv2.LINE_AA)
+            img = cv2.putText(frame, str(dist), (110,50), font, frontScale, color,1 , cv2.LINE_AA)
+    #aici vine codul sters
+    
     
                                             
     # Afișăm frame-ul folosind OpenCV
