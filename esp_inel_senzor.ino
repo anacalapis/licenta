@@ -8,6 +8,9 @@ BluetoothSerial SerialBT;
 String command = "";
 bool flag;
 
+unsigned long currentMillis = 0;
+unsigned long previousMillis = 0;
+
 int score = 0;
 int sensor1State= 1;
 int sensor2State= 1;
@@ -20,7 +23,8 @@ void setup() {
   SerialBT.begin("ESP_Inel_Device"); 
 }
 
-void loop() {
+void loop() 
+{
   sensor1State = digitalRead(SENSOR1_PIN); 
   sensor3State = digitalRead(SENSOR3_PIN);
   while (SerialBT.available()) {
@@ -42,18 +46,23 @@ void loop() {
   }
   if ((sensor1State == 0 || sensor3State==0) && flag)
   {
-    delay(50);
-    sensor2State = digitalRead(SENSOR2_PIN);
-    if(sensor2State == 0)
-    { 
-      score++;
+    previousMillis = millis();
+    currentMillis = millis();
+    while(currentMillis - previousMillis < 300)
+    {
+      sensor2State = digitalRead(SENSOR2_PIN);
+      if(sensor2State == 0)
+      { 
+        score++;
+        break;
+      }
+      currentMillis = millis();
     }
-    //Serial.print(sensor2State);
   }
   // Serial.print("senz1 ");
   //Serial.print(sensor1State);
-  // Serial.print("senz2 ");
-  // Serial.print(sensor2State);
+  //Serial.print("senz2 ");
+  //Serial.println(sensor2State);
   // Serial.print("senz3 ");
   //Serial.println(sensor3State);
   //Serial.print("        score ");
