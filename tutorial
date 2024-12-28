@@ -36,3 +36,8 @@ pentru a functiona ecranul LCD trebuie sa ne instalam o biblioteca
 -am adaugat biblioteca manual de la 
 	Sketch -> Include Library -> Add .zip Library
 
+pentru a funcționa un IMU, am adaugat urmatoarele biblioteci în ArduinoIDE de la Tools -> Manage Libraries:
+	-Adafruit BNO055
+	-Adafruit Unified Sensor
+	-si asta pentru sigurnață Adafruit MPU6050
+
