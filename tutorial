@@ -40,4 +40,5 @@ pentru a funcționa un IMU, am adaugat urmatoarele biblioteci în ArduinoIDE de 
 	-Adafruit BNO055
 	-Adafruit Unified Sensor
 	-si asta pentru sigurnață Adafruit MPU6050
+tutorialul după care m-am inspirat este https://www.youtube.com/watch?v=14-hppF0vtQ&list=PLGs0VKk2DiYwEo-k0mjIkWXlkrJWAU4L9&index=2 
 
