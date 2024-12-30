@@ -15,6 +15,9 @@ int score = 0;
 int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
+
+char comanda;
+
 void setup() {
   pinMode(SENSOR1_PIN, INPUT_PULLUP); 
   pinMode(SENSOR2_PIN, INPUT_PULLUP); 
@@ -33,12 +36,23 @@ void loop()
       command.trim();  // Eliminăm orice spațiu sau \n la începutul și sfârșitul comenzii
       if (command.equals("S")) {
         flag = true;
+        comanda = 'S';
         Serial.println("Received S");
       }
-      else if (command.equals("P")) {
+      if (command.equals("P")) 
+      {
         flag = false;
+        //comanda = 'P';
         Serial.println("Received P");
       }
+      if (command.equals("L")) 
+      {
+        flag = true;
+        comanda = 'L';
+        Serial.println("Received L");
+      }
+      
+  
       command = "";  // Resetăm comanda pentru următoarea citire
     } else {
       command += c;  // Adăugăm caracterul la comanda curentă
@@ -53,8 +67,20 @@ void loop()
       sensor2State = digitalRead(SENSOR2_PIN);
       if(sensor2State == 0)
       { 
-        score++;
-        break;
+        if(comanda == 'L')
+        {
+          score++;
+          SerialBT.printf("%d", score);
+          break;
+        }
+        if(comanda == 'S')
+        {
+          score=score+2;
+          SerialBT.printf("%d", score);
+          break;
+        }
+        // score++;
+        //break;
       }
       currentMillis = millis();
     }

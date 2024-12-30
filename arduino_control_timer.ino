@@ -132,10 +132,11 @@ void displayQuarter()
     //if (digitalRead(pauseButton) == LOW)
     if(command.equals("01"))
     {
-      Serial.println("P");
+      Serial.println("L");
       isPaused = true; // Oprește timpul 
       delay(100);
     }
+    displayScor();
     
     if (command.equals("00")) 
     {
