@@ -2,28 +2,14 @@ import depthai as dai
 import cv2 
 import numpy as np
 
-orange = [0, 118, 255]
 font = cv2.FONT_HERSHEY_SIMPLEX
 frontScale = 0.6
 color = (0,0,255)
 # Creăm un pipeline DepthAI
 pipeline = dai.Pipeline()
+lowerLimit = np.array([5,100,20]) #HSV
+upperLimit = np.array([25,255,255])
 
-def get_limits(color):
-    c = np.uint8([[color]])
-    hsvC = cv2.cvtColor(c, cv2.COLOR_BGR2HSV)
-    
-    lowerLimit = hsvC[0][0][0] -10, 100, 100
-    upperLimit = hsvC[0][0][0] +10, 255, 255
-    
-    lowerLimit = np.array(lowerLimit, dtype=np.uint8)
-    upperLimit = np.array(upperLimit, dtype=np.uint8)
-    
-    return lowerLimit, upperLimit 
-    
-
-prevCircle = None #circle from the previous frame
-dist = lambda x1,y1,x2,y2: (x1-x2)**2+(y1-y2)**2
 # Adăugăm o cameră RGB la pipeline
 cam_rgb = pipeline.createColorCamera()
 cam_rgb.setPreviewSize(1000,  700)  #camera window size
@@ -47,32 +33,27 @@ while True:
     frame = in_rgb.getCvFrame()
     
     hsvImage = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-    lowerLimit, upperLimit = get_limits(color=orange)
     mask = cv2.inRange(hsvImage, lowerLimit, upperLimit)
-    #cv2.imshow("OAK-D Lite RGB", mask)
+    #cv2.imshow("OAK-D Lite mask", mask)
     
     #grayFrame =  cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     #blurFrame = cv2.GaussianBlur(grayFrame, (17,17), 0)    #cu cat pui mai mult la 17, cu atat va deveni imaginea mai blured
     
-    d_img = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), 'uint8'), iterations = 5)
-    cont,hei = cv2.findContours(d_img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE)
+    d_img = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((3,3), 'uint8'), iterations=5 )
+    cont,hei = cv2.findContours(d_img,cv2.RETR_EXTERNAL,cv2.CHAIN_APPROX_SIMPLE) #detectia conturilor ditr-o imagine binara
     cont = sorted(cont, key = cv2.contourArea , reverse = True)[:1]
     for cnt in cont:
         if (cv2.contourArea(cnt)>100 and cv2.contourArea(cnt)<306000):
-            rect = cv2.minAreaRect(cnt)
+            rect = cv2.minAreaRect(cnt) #face un dreptunghi rotit care se ajusteaza cat mai strans posibil in jurul conturului
             box = cv2.boxPoints(rect)
             box = np.int0(box)
             cv2.drawContours(frame,[box], -1, (255,0,0) ,3)
             
             pixels = rect[1][0]
             print(pixels)
-            #dist = (width*focal)/pixels
-            dist = (6*819)/pixels
+            dist = (6.5*1086)/pixels #dist = (width*focal)/pixels
             img = cv2.putText(frame, 'distance', (0, 20) , font, 1, color, 2, cv2.LINE_AA)
             img = cv2.putText(frame, str(dist), (110,50), font, frontScale, color,1 , cv2.LINE_AA)
-    #aici vine codul sters
-    
-    
                                             
     # Afișăm frame-ul folosind OpenCV
     cv2.imshow("OAK-D Lite RGB", frame)
