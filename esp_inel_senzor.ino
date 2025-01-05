@@ -6,6 +6,7 @@
 BluetoothSerial SerialBT;
 
 String command = "";
+int distanta =0;
 bool flag;
 
 unsigned long currentMillis = 0;
@@ -34,27 +35,41 @@ void loop()
     char c = SerialBT.read();  // Citim câte un caracter
     if (c == '\n') {  // Dacă am primit un caracter de sfârșit de linie, procesăm comanda
       command.trim();  // Eliminăm orice spațiu sau \n la începutul și sfârșitul comenzii
-      if (command.equals("S")) {
-        flag = true;
-        comanda = 'S';
-        Serial.println("Received S");
-      }
-      if (command.equals("P")) 
+      //Serial.println(command[0]);
+      if(command[0]=='3')
       {
-        flag = false;
-        //comanda = 'P';
-        Serial.println("Received P");
+        String sir = String(command.c_str() +1); 
+        if (sir.equals("S")) 
+        {
+          flag = true;
+          comanda = 'S';
+          Serial.println("Received S");
+        }
+        if (sir.equals("P")) 
+        {
+          flag = false;
+          //comanda = 'P';
+          Serial.println("Received P");
+        }
+        if (sir.equals("L")) 
+        {
+          flag = true;
+          comanda = 'L';
+          Serial.println("Received L");
+        }
       }
-      if (command.equals("L")) 
+      if(command[0]=='4')
       {
-        flag = true;
-        comanda = 'L';
-        Serial.println("Received L");
+        String d = String(command.c_str() +1);
+        distanta = d.toInt();
+        //Serial.println(distanta);
+
       }
       
-  
       command = "";  // Resetăm comanda pentru următoarea citire
-    } else {
+    } 
+    else 
+    {
       command += c;  // Adăugăm caracterul la comanda curentă
     }
   }
@@ -75,7 +90,15 @@ void loop()
         }
         if(comanda == 'S')
         {
-          score=score+2;
+          if(distanta <= 50)
+          {
+            score = score+2;
+          }
+          else
+          {
+            score = score+3;
+          }
+          //score=score+2;
           SerialBT.printf("%d", score);
           break;
         }
