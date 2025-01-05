@@ -1,6 +1,8 @@
 import depthai as dai
 import cv2 
 import numpy as np
+import threading 
+lock = threading.Lock()
 
 font = cv2.FONT_HERSHEY_SIMPLEX
 frontScale = 0.6
@@ -27,6 +29,11 @@ device = dai.Device(pipeline)
 # Obținem coada de ieșire pentru fluxul RGB
 q_rgb = device.getOutputQueue(name="video", maxSize=4, blocking=False)
 
+def write_distance_to_file(distance):
+    with lock:
+        with open("distanta.txt", "w") as file:
+            file.write(str(distance))
+
 while True:
     # Citim frame-urile RGB din coadă
     in_rgb = q_rgb.get()
@@ -50,8 +57,9 @@ while True:
             cv2.drawContours(frame,[box], -1, (255,0,0) ,3)
             
             pixels = rect[1][0]
-            print(pixels)
+            #print(pixels)
             dist = (6.5*1086)/pixels #dist = (width*focal)/pixels
+            write_distance_to_file(dist)
             img = cv2.putText(frame, 'distance', (0, 20) , font, 1, color, 2, cv2.LINE_AA)
             img = cv2.putText(frame, str(dist), (110,50), font, frontScale, color,1 , cv2.LINE_AA)
                                             
