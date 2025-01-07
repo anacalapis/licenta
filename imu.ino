@@ -142,31 +142,46 @@ void setup() {
 #define PRAG_ACC_Z 8
 #define OSCILATIE 0.2
 
-float accelBuffer[BUFFER_SIZE] = {0};
+
 int bufferIndex = 0;
 
 float acc_x[BUFFER_SIZE]={0};
 float acc_z[BUFFER_SIZE]={0};
+float accelBuffer[BUFFER_SIZE] = {0};
 void loop()
 {
   gyro_signals();
   accel_signals();
 
-
+  actualizare_medie_acc(accelBuffer);
   umplere_acc(acc_x, imuu, 'x');
-  if((analiza(acc_x) !=0) && (analiza(acc_x) !=1) && (analiza(acc_x) >PRAG_ACC_X ))
+  
+  if(calculeaza_media(accelBuffer, 0, BUFFER_SIZE-1) < (9.81 - OSCILATIE))
   {
-    SerialBT.print("0");
-    float varf = analiza(acc_z);
-    //SerialBT.print(varf);
-    umplere_acc(acc_z, imuu, 'z');
-    if((analiza(acc_z) !=0))   //&& (analiza(acc_z) !=1)) //&& (analiza(acc_z) > PRAG_ACC_Z))
+    //SerialBT.print("0");
+    if((analiza(acc_x) !=0) && (analiza(acc_x) !=1) && (analiza(acc_x) >PRAG_ACC_X ))
     {
       SerialBT.print("1");
-      delay(300);
-    }
+      umplere_acc(acc_z, imuu, 'z');
+      //delay(50);
+      // float varf = analiza(acc_z);
+      // SerialBT.print(varf);
+      // float media_z = calculeaza_media(acc_z, 0, BUFFER_SIZE - 1);
+      //   if (abs(media_z - 9.8) < OSCILATIE) {
+      //       SerialBT.print("0"); 
+      //   }
+      if((analiza(acc_z) !=0))   //&& (analiza(acc_z) !=1)) //&& (analiza(acc_z) > PRAG_ACC_Z))
+      //if(calculeaza_media(acc_z, 0, BUFFER_SIZE/2) > calculeaza_media(acc_z, BUFFER_SIZE/2 +1, BUFFER_SIZE-1))
+      {
+        SerialBT.print("2");
+        delay(300);
+      }
     
+   }
   }
+   
+    
+  
 }
 void umplere_acc(float* vector, Adafruit_MPU6050& imuu, char axa)
 {
@@ -184,6 +199,20 @@ void umplere_acc(float* vector, Adafruit_MPU6050& imuu, char axa)
     }
   }
 }
+ void actualizare_medie_acc(float* accelBuffer) 
+ {
+  sensors_event_t accel;
+  imuu.getAccelerometerSensor()->getEvent(&accel);
+  float accelMagnitude = sqrt(
+      accel.acceleration.x * accel.acceleration.x +
+      accel.acceleration.y * accel.acceleration.y +
+      accel.acceleration.z * accel.acceleration.z
+  );
+  accelBuffer[bufferIndex] = accelMagnitude;
+  bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
+}
+
+
 float analiza(float* vector)
 {
   for(int i=1; i<BUFFER_SIZE; i++)
@@ -201,6 +230,15 @@ float analiza(float* vector)
     }
   }
   return 1; //cazul in care sunt in ordine crescatoare
+}
+float calculeaza_media(float* vector, int stanga, int dreapta)
+{
+  int sum =0;
+  for(int i=stanga; i<dreapta; i++)
+  {
+    sum= sum + vector[i];
+  }
+  return sum/(dreapta-stanga+1);
 }
 void gyro_signals(void) {
   Wire.beginTransmission(0x68);
@@ -237,6 +275,7 @@ void accel_signals(void) {
 
 
 
+
 //afiseaza plotul de la IMU
 // void loop()
 // {
@@ -258,7 +297,7 @@ void accel_signals(void) {
 
 
 
-//e facut cu chatul, imi place ca trimite fix cand e in aer 0, dar se si blocheaza din cauza variabilei inAir. trimite mult prea multe date..
+// imi place ca trimite fix cand e in aer 0, dar se si blocheaza din cauza variabilei inAir. trimite mult prea multe date..
 // #define OSCILATIE 0.1
 // #define BUFFER_SIZE 20
 // float accelBuffer[BUFFER_SIZE] = {0};
@@ -297,6 +336,7 @@ void accel_signals(void) {
 //   avgAccel /= BUFFER_SIZE;
 
 //   // Verifică dacă mingea este în aer sau a ajuns jos
+//   // 
 //   if (!inAir && avgAccel < (9.81 - OSCILATIE)) {
 //     // Mingea a fost aruncată
 //     inAir = true;
