@@ -8,19 +8,19 @@
 
 BluetoothSerial SerialBT;
 
-#define CRESTERE_VIT_UNGHI 2
-#define OSCILATIE 0.1
+// #define CRESTERE_VIT_UNGHI 2
+// #define OSCILATIE 0.1
 Adafruit_MPU6050 imuu;
 //MPU6050 imuu;
-float anterior_vit_unghi = 0;
-float curent_vit_unghi =0;
-float curent_acceleratie = 0, total=0, medie=0;
-int nr_rep=0;
-//float acc_x, acc_y, acc_z;
-//float giro_x, giro_y, giro_z;
+//float anterior_vit_unghi = 0;
+// float curent_vit_unghi =0;
+// float curent_acceleratie = 0, total=0, medie=0;
+// int nr_rep=0;
+// //float acc_x, acc_y, acc_z;
+// //float giro_x, giro_y, giro_z;
 
-unsigned long currentMillis = 0;
-unsigned long previousMillis = 0;
+// unsigned long currentMillis = 0;
+// unsigned long previousMillis = 0;
 
 void setup() {
   Serial.begin(9600); 
@@ -30,9 +30,9 @@ void setup() {
   Wire.setClock(400000);
   Wire.begin();
   delay(250);
-  Wire.beginTransmission(0x68); 
-  Wire.write(0x6B);
-  Wire.write(0x00);
+  Wire.beginTransmission(0x68); //începe o transmisie către dispozitivul I2C cu adresa 0x68,
+  Wire.write(0x6B);             //gestionarea alimentării senzorului
+  Wire.write(0x00);             //senzorul va ieși din modul de repaus și va începe să fie activ
   Wire.endTransmission();
 
   // imuu.setAccelerometerRange(MPU6050_RANGE_8_G);
@@ -40,6 +40,106 @@ void setup() {
   // imuu.setFilterBandwidth(MPU6050_BAND_21_HZ);
   //Wire.begin();
 }
+
+
+
+
+#define BUFFER_SIZE 50
+#define TOLERANTA 1.2
+float buffer[BUFFER_SIZE]={0};
+int indexx =0, flag=0;
+float varf_curent=0, varf_anterior=0;
+float acc_x[BUFFER_SIZE]={0}, acc_y[BUFFER_SIZE]={0}, acc_z[BUFFER_SIZE]={0};
+void loop()
+{
+  sensors_event_t accel;
+  imuu.getAccelerometerSensor()->getEvent(&accel);
+  float acceleratie = sqrt(
+      accel.acceleration.x * accel.acceleration.x +
+      accel.acceleration.y * accel.acceleration.y +
+      accel.acceleration.z * accel.acceleration.z
+  );
+  buffer[indexx]= acceleratie;
+  acc_x[indexx]= accel.acceleration.x;
+  acc_y[indexx]= accel.acceleration.y;
+  acc_z[indexx]= accel.acceleration.z;
+  indexx= (indexx+1) % BUFFER_SIZE;
+  if(flag == 0)
+  {
+    varf_anterior= analiza_buffer(buffer);
+    flag =1;
+  }
+  else
+  {
+    varf_curent = analiza_buffer(buffer);
+    if((varf_curent > 9.8 + TOLERANTA) && ((int)varf_curent != (int)varf_anterior))
+    {
+      SerialBT.print((int)varf_curent);
+      if((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0))
+      {
+        SerialBT.print("a");
+      }
+    }
+    varf_anterior = varf_curent;
+
+    
+  }
+ 
+  delay(50);  //se iau masuratori de 20 ori pe secunda
+
+
+}
+float analiza_buffer(float buffer[])
+{
+  int toleranta=0.2;
+  float varf_max=0;
+  for(int i=1; i<BUFFER_SIZE-1; i++)
+  {
+    if((buffer[i]< buffer[i-1]) && (buffer[i] > buffer[i+1]))
+    {
+      if(varf_max < buffer[i])
+      {
+        varf_max = buffer[i];
+      }
+      
+    }
+  
+  }
+  //SerialBT.print(varf_max);
+  return varf_max;
+}
+
+int analiza_pe_componente (float buffer[])
+{
+  int vector_frecv[30]={0};
+  int pondere_maxima=0, indice=-1;
+  for(int i=0; i<30; i++)
+  {
+    vector_frecv[(int)buffer[i]]++;
+  }
+  for(int i=0; i<30; i++)
+  {
+    if(vector_frecv[i]> pondere_maxima)
+    {
+      pondere_maxima = vector_frecv[i];
+      indice=i;
+    }
+  }
+  return indice;
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 //se bazeaza pe un buffer circular care tine minte ultimele 10 masuratori
@@ -139,135 +239,135 @@ void setup() {
 
 //se bazeaza pe acc x si pe acc y
 //merge cam de 6-7 doar ca trimite ambele mesaje cand a aterizat
-#define BUFFER_SIZE 20
-#define PRAG_ACC_X 13
-#define PRAG_ACC_Z 8
-#define OSCILATIE 0.2
+// #define BUFFER_SIZE 20
+// #define PRAG_ACC_X 13
+// #define PRAG_ACC_Z 8
+// #define OSCILATIE 0.2
 
 
-int bufferIndex = 0;
+// int bufferIndex = 0;
 
-float acc_x[BUFFER_SIZE]={0};
-float acc_z[BUFFER_SIZE]={0};
-float accelBuffer[BUFFER_SIZE] = {0};
-void loop()
-{
-  gyro_signals();
-  accel_signals();
+// float acc_x[BUFFER_SIZE]={0};
+// float acc_z[BUFFER_SIZE]={0};
+// float accelBuffer[BUFFER_SIZE] = {0};
+// void loop()
+// {
+//   gyro_signals();
+//   accel_signals();
 
-  actualizare_medie_acc(accelBuffer);
-  umplere_acc(acc_x, imuu, 'x');
+//   actualizare_medie_acc(accelBuffer);
+//   umplere_acc(acc_x, imuu, 'x');
   
-  if(calculeaza_media(accelBuffer, 0, BUFFER_SIZE-1) < (9.81 - OSCILATIE))
-  {
-    //SerialBT.print("0");
-    if((analiza(acc_x) !=0) && (analiza(acc_x) !=1) && (analiza(acc_x) >PRAG_ACC_X ))
-    {
-      SerialBT.print("1");
-      umplere_acc(acc_z, imuu, 'z');
-      //delay(50);
-      // float varf = analiza(acc_z);
-      // SerialBT.print(varf);
-      // float media_z = calculeaza_media(acc_z, 0, BUFFER_SIZE - 1);
-      //   if (abs(media_z - 9.8) < OSCILATIE) {
-      //       SerialBT.print("0"); 
-      //   }
-      if((analiza(acc_z) !=0))   //&& (analiza(acc_z) !=1)) //&& (analiza(acc_z) > PRAG_ACC_Z))
-      //if(calculeaza_media(acc_z, 0, BUFFER_SIZE/2) > calculeaza_media(acc_z, BUFFER_SIZE/2 +1, BUFFER_SIZE-1))
-      {
-        SerialBT.print("2");
-        delay(300);
-      }
+//   if(calculeaza_media(accelBuffer, 0, BUFFER_SIZE-1) < (9.81 - OSCILATIE))
+//   {
+//     SerialBT.print(analiza(acc_x));
+//     if(analiza(acc_x) >PRAG_ACC_X )
+//     {
+//       SerialBT.print("1");
+//       umplere_acc(acc_z, imuu, 'z');
+//       //delay(50);
+//       // float varf = analiza(acc_z);
+//       // SerialBT.print(varf);
+//       // float media_z = calculeaza_media(acc_z, 0, BUFFER_SIZE - 1);
+//       //   if (abs(media_z - 9.8) < OSCILATIE) {
+//       //       SerialBT.print("0"); 
+//       //   }
+//       if((analiza(acc_z) !=0))   //&& (analiza(acc_z) !=1)) //&& (analiza(acc_z) > PRAG_ACC_Z))
+//       //if(calculeaza_media(acc_z, 0, BUFFER_SIZE/2) > calculeaza_media(acc_z, BUFFER_SIZE/2 +1, BUFFER_SIZE-1))
+//       {
+//         SerialBT.print("2");
+//         delay(300);
+//       }
     
-   }
-  }
+//    }
+//   }
    
     
   
-}
-void umplere_acc(float* vector, Adafruit_MPU6050& imuu, char axa)
-{
-  for(int i=0; i<BUFFER_SIZE; i++)
-  {
-    sensors_event_t acc;
-    imuu.getAccelerometerSensor()->getEvent(&acc);
-    if(axa=='x')
-    {
-      vector[i] = acc.acceleration.x;
-    }
-    if(axa=='z')
-    {
-      vector[i] = acc.acceleration.z;
-    }
-  }
-}
- void actualizare_medie_acc(float* accelBuffer) 
- {
-  sensors_event_t accel;
-  imuu.getAccelerometerSensor()->getEvent(&accel);
-  float accelMagnitude = sqrt(
-      accel.acceleration.x * accel.acceleration.x +
-      accel.acceleration.y * accel.acceleration.y +
-      accel.acceleration.z * accel.acceleration.z
-  );
-  accelBuffer[bufferIndex] = accelMagnitude;
-  bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
-}
+// }
+// void umplere_acc(float* vector, Adafruit_MPU6050& imuu, char axa)
+// {
+//   for(int i=0; i<BUFFER_SIZE; i++)
+//   {
+//     sensors_event_t acc;
+//     imuu.getAccelerometerSensor()->getEvent(&acc);
+//     if(axa=='x')
+//     {
+//       vector[i] = acc.acceleration.x;
+//     }
+//     if(axa=='z')
+//     {
+//       vector[i] = acc.acceleration.z;
+//     }
+//   }
+// }
+//  void actualizare_medie_acc(float* accelBuffer) 
+//  {
+//   sensors_event_t accel;
+//   imuu.getAccelerometerSensor()->getEvent(&accel);
+//   float accelMagnitude = sqrt(
+//       accel.acceleration.x * accel.acceleration.x +
+//       accel.acceleration.y * accel.acceleration.y +
+//       accel.acceleration.z * accel.acceleration.z
+//   );
+//   accelBuffer[bufferIndex] = accelMagnitude;
+//   bufferIndex = (bufferIndex + 1) % BUFFER_SIZE;
+// }
 
 
-float analiza(float* vector)
-{
-  for(int i=1; i<BUFFER_SIZE; i++)
-  {
-    if(vector[i-1]> vector[i])
-    {
-      for(int j=i; j<BUFFER_SIZE -1; j++)
-      {
-        if(vector[i]<vector[i+1])
-        {
-          return 0;   //are mai mult de o "cocoasa" , deci nu ne ajuta
-        }
-      }
-      return vector[i-1];  //cazul in care s-a atins punctul maxim
-    }
-  }
-  return 1; //cazul in care sunt in ordine crescatoare
-}
-float calculeaza_media(float* vector, int stanga, int dreapta)
-{
-  int sum =0;
-  for(int i=stanga; i<dreapta; i++)
-  {
-    sum= sum + vector[i];
-  }
-  return sum/(dreapta-stanga+1);
-}
-void gyro_signals(void) {
-  Wire.beginTransmission(0x68);
-  Wire.write(0x1A);
-  Wire.write(0x05);
-  Wire.endTransmission(); 
-  Wire.beginTransmission(0x68);
-  Wire.write(0x1B); 
-  Wire.write(0x8); 
-  Wire.endTransmission(); 
-  Wire.beginTransmission(0x68);
-  Wire.write(0x43);
-  Wire.endTransmission();
-  Wire.requestFrom(0x68,6);
-}
+// float analiza(float* vector)
+// {
+//   for(int i=1; i<BUFFER_SIZE; i++)
+//   {
+//     if(vector[i-1]> vector[i])
+//     {
+//       for(int j=i; j<BUFFER_SIZE -1; j++)
+//       {
+//         if(vector[i]<vector[i+1])
+//         {
+//           return 0;   //are mai mult de o "cocoasa" , deci nu ne ajuta
+//         }
+//       }
+//       return vector[i-1];  //cazul in care s-a atins punctul maxim
+//     }
+//   }
+//   return 1; //cazul in care sunt in ordine crescatoare
+// }
+// float calculeaza_media(float* vector, int stanga, int dreapta)
+// {
+//   int sum =0;
+//   for(int i=stanga; i<dreapta; i++)
+//   {
+//     sum= sum + vector[i];
+//   }
+//   return sum/(dreapta-stanga+1);
+// }
+// void gyro_signals(void) {
+//   Wire.beginTransmission(0x68);
+//   Wire.write(0x1A);
+//   Wire.write(0x05);
+//   Wire.endTransmission(); 
+//   Wire.beginTransmission(0x68);
+//   Wire.write(0x1B); 
+//   Wire.write(0x8); 
+//   Wire.endTransmission(); 
+//   Wire.beginTransmission(0x68);
+//   Wire.write(0x43);
+//   Wire.endTransmission();
+//   Wire.requestFrom(0x68,6);
+// }
 
-void accel_signals(void) {
-  Wire.beginTransmission(0x68);
-  Wire.write(0x1C);
-  Wire.write(0x10); 
-  Wire.endTransmission();
-  Wire.beginTransmission(0x68);
-  Wire.write(0x3B);
-  Wire.endTransmission();
-  Wire.requestFrom(0x68, 6);
+// void accel_signals(void) {
+//   Wire.beginTransmission(0x68);
+//   Wire.write(0x1C);
+//   Wire.write(0x10); 
+//   Wire.endTransmission();
+//   Wire.beginTransmission(0x68);
+//   Wire.write(0x3B);
+//   Wire.endTransmission();
+//   Wire.requestFrom(0x68, 6);
 
-}
+// }
 
 
 
@@ -299,7 +399,8 @@ void accel_signals(void) {
 
 
 
-// imi place ca trimite fix cand e in aer 0, dar se si blocheaza din cauza variabilei inAir. trimite mult prea multe date..
+// // imi place ca trimite fix cand e in aer 0, dar se si blocheaza din cauza variabilei inAir. trimite mult prea multe date..
+
 // #define OSCILATIE 0.1
 // #define BUFFER_SIZE 20
 // float accelBuffer[BUFFER_SIZE] = {0};
@@ -350,4 +451,68 @@ void accel_signals(void) {
     
 //   }
 // }
+
+
+
+
+
+// #define BUFFER_SIZE 10
+// float accel_buffer[BUFFER_SIZE] = {0};
+// int i = 0;
+// int flag=0;
+// float filtered_acc=0, previous=0, current=0;
+// void loop()
+// {
+//   sensors_event_t accel, giro, temp;
+//   int16_t ax, ay, az, gx, gy, gz;
+//   //sensors_event_t acc, giro, temp;
+//   imuu.getEvent(&accel, &giro, &temp);
+//   //imuu.getAccelerometerSensor()->getEvent(&accel);
+//   ax = accel.acceleration.x;
+//   ay = accel.acceleration.y;
+//   az = accel.acceleration.z;
+//   //imuu.getGyroSensor()->getEvent(&giro);
+//   gx = giro.gyro.x;
+//   gy = giro.gyro.y;
+//   gz = giro.gyro.z;
+//   filtered_acc= adaugare_de_valoare(ay, accel_buffer);
+//   if(flag==0)
+//   {
+//     previous = filtered_acc;
+//     flag=1;
+//   }
+//   else
+//   {
+//     if(flag==1)
+//     {
+//       current= filtered_acc;
+//       flag=2;
+//     }
+//     else
+//     {
+//       previous = current;
+//       current = filtered_acc;
+//       SerialBT.print(previous);
+//       if(previous > current && previous>13)
+//       {
+//         SerialBT.print("v");
+//       }
+//     }
+//   }
+//   delay(10);
+ 
+
+// }
+// float adaugare_de_valoare(float newValue, float buffer[])
+// {
+//   accel_buffer[i] = newValue;
+//   i = (i++) % BUFFER_SIZE;
+//   float sum = 0;
+//   for (int i = 0; i < BUFFER_SIZE; i++) 
+//   {
+//     sum += accel_buffer[i];
+//   }
+//   return sum / BUFFER_SIZE;
+// }
+
 
