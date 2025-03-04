@@ -71,16 +71,14 @@ void loop()
   }
   else
   {
-    varf_curent = analiza_buffer(buffer);
-    if((varf_curent > 9.8 + TOLERANTA) && ((int)varf_curent != (int)varf_anterior))
+    varf_curent = (int)analiza_buffer(buffer);
+    if((varf_curent > 9.8 + TOLERANTA) && ((int)varf_curent != (int)varf_anterior) && ((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0)))
+    //if((varf_curent !=1) && ((int)varf_curent != (int)varf_anterior)) //&& ((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0)))
     {
       SerialBT.print((int)varf_curent);
-      if((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0))
-      {
-        SerialBT.print("a");
-      }
+     
     }
-    varf_anterior = varf_curent;
+    varf_anterior = (int)varf_curent;
 
     
   }
@@ -91,8 +89,9 @@ void loop()
 }
 float analiza_buffer(float buffer[])
 {
-  int toleranta=0.2;
+  int toleranta=0.1;
   float varf_max=0;
+  int cnt=0, limita_dreapta=0, limita_stanga=0;;
   for(int i=1; i<BUFFER_SIZE-1; i++)
   {
     if((buffer[i]< buffer[i-1]) && (buffer[i] > buffer[i+1]))
@@ -100,13 +99,35 @@ float analiza_buffer(float buffer[])
       if(varf_max < buffer[i])
       {
         varf_max = buffer[i];
+        //limita_stanga=i;
       }
       
     }
   
   }
-  //SerialBT.print(varf_max);
   return varf_max;
+
+  // if(BUFFER_SIZE-1 - limita_stanga >10)
+  // {
+  //   limita_dreapta= limita_stanga+10;
+  // }
+  // else
+  // {
+  //   limita_dreapta = BUFFER_SIZE-1;
+  // }
+  // for(int j=limita_stanga; j<limita_dreapta; j++)
+  // {
+  //   if((9.8- toleranta < buffer[j]) && (toleranta <9.8 + toleranta))
+  //   {
+  //     cnt++;
+  //   }
+  // }
+  // if(cnt >=7)
+  // {
+  //   return varf_max;
+  // }
+  // //SerialBT.print(varf_max);
+  // return 1;
 }
 
 int analiza_pe_componente (float buffer[])
