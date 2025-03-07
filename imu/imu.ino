@@ -44,111 +44,196 @@ void setup() {
 
 
 
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 30
 #define TOLERANTA 1.2
-float buffer[BUFFER_SIZE]={0};
+float buffer1[BUFFER_SIZE]={0}, buffer2[BUFFER_SIZE]={0};
 int indexx =0, flag=0;
 float varf_curent=0, varf_anterior=0;
-float acc_x[BUFFER_SIZE]={0}, acc_y[BUFFER_SIZE]={0}, acc_z[BUFFER_SIZE]={0};
+int cnt=0; //nr de elem din primul buffer
+int i=0, j=0;
+float  max_buff1=0, max_buff2=0, maxim=0;
+// void loop()
+// {
+//   sensors_event_t accel;
+//   imuu.getAccelerometerSensor()->getEvent(&accel);
+//   float acceleratie = sqrt(
+//       accel.acceleration.x * accel.acceleration.x +
+//       accel.acceleration.y * accel.acceleration.y +
+//       accel.acceleration.z * accel.acceleration.z
+//   );
+  
+//   if(cnt<10)
+//   {
+//     buffer1[i++]= acceleratie;
+//     cnt++;
+//   }
+//   else
+//   {
+//     if(cnt<30)
+//     {
+//       buffer1[i++]=acceleratie;
+//       buffer2[j++]=acceleratie;
+//       cnt++;
+
+//     }
+//     if(cnt>=30 && cnt<40)
+//     {
+//       buffer2[j++]=acceleratie;
+//       cnt++;
+//     }
+
+
+//     if(cnt>=40 && cnt%20==0)  //se va termina B si trebuie sa shiftam A
+//     {
+//       max_buff1=maxim_vector(buffer1);
+//       max_buff2=maxim_vector(buffer2);
+//       if(max_buff1 > max_buff2)
+//       {
+//         SerialBT.print(maxim);
+//         i=j=cnt=0;
+//       }
+//       else //maximul e din buffer2, shiftam
+//       {
+//           for(int i=0; i<10; i++)
+//             {
+//               buffer1[i]=buffer1[i+20];
+//               buffer1[i+10]=buffer2[i+20];
+//             }
+//             i=20;
+//             while(i<30) buffer1[i++] = acceleratie;
+//       }
+
+      
+
+
+//     }
+//     if((cnt-30)%20==0) //se termina A, shiftam B
+//     {
+
+//     }
+//   }
+
+ 
+ 
+//   delay(50);  //se iau masuratori de 20 ori pe secunda
+
+
+// }
+
+int start=0, finalA=0;
+float maxim_anterior =0;
 void loop()
 {
-  sensors_event_t accel;
-  imuu.getAccelerometerSensor()->getEvent(&accel);
-  float acceleratie = sqrt(
-      accel.acceleration.x * accel.acceleration.x +
-      accel.acceleration.y * accel.acceleration.y +
-      accel.acceleration.z * accel.acceleration.z
-  );
-  buffer[indexx]= acceleratie;
-  acc_x[indexx]= accel.acceleration.x;
-  acc_y[indexx]= accel.acceleration.y;
-  acc_z[indexx]= accel.acceleration.z;
-  indexx= (indexx+1) % BUFFER_SIZE;
-  if(flag == 0)
+  
+  if(start==0)
   {
-    varf_anterior= analiza_buffer(buffer);
-    flag =1;
+    prelucrare_initiala(cnt);
+    start=1;
+  }
+  float fct = final_vector();
+  if(maxim_anterior <= fct)
+  {
+    maxim_anterior=fct;
   }
   else
   {
-    varf_curent = (int)analiza_buffer(buffer);
-    if((varf_curent > 9.8 + TOLERANTA) && ((int)varf_curent != (int)varf_anterior) && ((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0)))
-    //if((varf_curent !=1) && ((int)varf_curent != (int)varf_anterior)) //&& ((analiza_pe_componente(acc_x)== 0) || (analiza_pe_componente(acc_y)== 0) || (analiza_pe_componente(acc_z)== 0)))
+    if((int)maxim_anterior != (int)fct)
     {
-      SerialBT.print((int)varf_curent);
-     
+      int masuratoare= (int)maxim_anterior;
+      SerialBT.print(masuratoare);
+      maxim_anterior=0;
     }
-    varf_anterior = (int)varf_curent;
-
     
   }
- 
-  delay(50);  //se iau masuratori de 20 ori pe secunda
-
-
+  delay(85);
 }
-float analiza_buffer(float buffer[])
+
+
+int prelucrare_initiala(int cnt)
 {
-  int toleranta=0.1;
-  float varf_max=0;
-  int cnt=0, limita_dreapta=0, limita_stanga=0;;
-  for(int i=1; i<BUFFER_SIZE-1; i++)
+  while(cnt<40)
   {
-    if((buffer[i]< buffer[i-1]) && (buffer[i] > buffer[i+1]))
+    sensors_event_t accel;
+    imuu.getAccelerometerSensor()->getEvent(&accel);
+    float acceleratie = sqrt(
+        accel.acceleration.x * accel.acceleration.x +
+        accel.acceleration.y * accel.acceleration.y +
+        accel.acceleration.z * accel.acceleration.z
+    );
+    if(cnt<10)
     {
-      if(varf_max < buffer[i])
+      buffer1[i++]= acceleratie;
+    }
+    else
+    {
+      if(cnt<30)
       {
-        varf_max = buffer[i];
-        //limita_stanga=i;
+        buffer1[i++]=acceleratie;
+        buffer2[j++]=acceleratie;
       }
-      
+      if(cnt>=30 && cnt<40)
+      {
+        buffer2[j++]=acceleratie;
+      }
     }
+    cnt++;
+
+  }
+  return cnt;
   
-  }
-  return varf_max;
-
-  // if(BUFFER_SIZE-1 - limita_stanga >10)
-  // {
-  //   limita_dreapta= limita_stanga+10;
-  // }
-  // else
-  // {
-  //   limita_dreapta = BUFFER_SIZE-1;
-  // }
-  // for(int j=limita_stanga; j<limita_dreapta; j++)
-  // {
-  //   if((9.8- toleranta < buffer[j]) && (toleranta <9.8 + toleranta))
-  //   {
-  //     cnt++;
-  //   }
-  // }
-  // if(cnt >=7)
-  // {
-  //   return varf_max;
-  // }
-  // //SerialBT.print(varf_max);
-  // return 1;
 }
 
-int analiza_pe_componente (float buffer[])
+float final_vector()
 {
-  int vector_frecv[30]={0};
-  int pondere_maxima=0, indice=-1;
-  for(int i=0; i<30; i++)
+  float max_buff1=maxim_vector(buffer1);
+  float max_buff2=maxim_vector(buffer2);
+
+  if(finalA==0) //cand e gata buffer B, adica (cnt-30)%20 ==0
   {
-    vector_frecv[(int)buffer[i]]++;
-  }
-  for(int i=0; i<30; i++)
-  {
-    if(vector_frecv[i]> pondere_maxima)
+    for(int i=0; i<20; i++)
     {
-      pondere_maxima = vector_frecv[i];
-      indice=i;
+      buffer1[i]=buffer1[i+10];
+    }
+    finalA=1;
+  }
+  else
+  {
+    for(int i=0; i<20; i++)
+    {
+      buffer2[i]=buffer2[i+10];
+    }
+    finalA=0;
+  }
+  for(int j=20; j<30; j++)
+  {
+    sensors_event_t accel;
+    imuu.getAccelerometerSensor()->getEvent(&accel);
+    float acceleratie = sqrt(
+        accel.acceleration.x * accel.acceleration.x +
+        accel.acceleration.y * accel.acceleration.y +
+        accel.acceleration.z * accel.acceleration.z
+    );
+    buffer1[j]=acceleratie;
+    buffer2[j]=acceleratie;
+  }
+  cnt=cnt+10; //pt ca s0au citit alte 10 elem noi
+
+  return max(max_buff1, max_buff2);
+}
+
+float maxim_vector(float vector[])
+{
+  float maxim=vector[0];
+  for(int i=1; i<=30; i++)
+  {
+    if(vector[i]>maxim)
+    {
+      maxim=vector[i];
     }
   }
-  return indice;
-
+  return maxim;
 }
+
 
 
 
