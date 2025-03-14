@@ -2,18 +2,28 @@
 import depthai as dai
 import cv2
 import numpy as np
+import math
+import threading 
+lock = threading.Lock()
+
+def write_distance_to_file(X, Y):
+    with lock:
+        with open("distanta.txt", "w") as file:
+            dist = math.sqrt((round(X, 2) - 50)**2 + (round(Y, 2))**2) #coord inel (50,0)
+            file.write(f'{round(dist,3)}')
+
 
 # Camera resolution
-width = 640
-height = 480
+width = 1280
+height = 720
 
 # HSV color range for orange ball
 lowerLimit = np.array([5, 100, 20])
 upperLimit = np.array([25, 255, 255])
 
 # Camera intrinsic parameters
-fx = 1086  # focal length in pixels
-fy = 1086
+fx = 800  # focal length in pixels
+fy = 800
 cx = width / 2  # principal point
 cy = height / 2
 
@@ -156,6 +166,7 @@ with dai.Device(pipeline) as device:
                     
                     # Display 3D position in centimeters
                     text = f"Position: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"
+                    write_distance_to_file(abs(X), abs(Y))
                     cv2.putText(rgbFrame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
                                 0.7, (0, 255, 0), 2)
                     
@@ -181,6 +192,7 @@ with dai.Device(pipeline) as device:
                                         Y = (y - cy) * Z / fy
                                         
                                         text = f"Position: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"
+                                        write_distance_to_file(abs(X), abs(Y))
                                         cv2.putText(rgbFrame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
                                                     0.7, (255, 165, 0), 2)  # Orange text for backup method
                                         
@@ -200,7 +212,7 @@ with dai.Device(pipeline) as device:
         cv2.imshow("Ball Tracker", rgbFrame)
         
         # Exit on 'q' key
-        if cv2.waitKey(1) == ord('q'):
+        if cv2.waitKey(1) == 27:
             break
 
 cv2.destroyAllWindows()

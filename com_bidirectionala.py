@@ -9,7 +9,7 @@ buf_size = 1024
 # Adresele ESP32
 addr_esp1 = "A0:A3:B3:97:55:46" #fluier
 addr_esp2 = "A0:A3:B3:96:69:6A" #inel
-#addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
+addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
@@ -32,23 +32,25 @@ def connect_to_esp(addr):
 # Funcție pentru recepția datelor de la un ESP32
 def rx_and_echo(sock, identifier):
     while True:
-        data = sock.recv(buf_size)
-        if data:
-            data = data.decode("utf-8")
-            #print(f"{identifier}{data}")
-            formatted_data = f"{identifier}{data}\n"
-            ser.write(formatted_data.encode("utf-8"))
+        #with lock:
+            data = sock.recv(buf_size)
+            if data:
+                data = data.decode("utf-8")
+                #print(f"{identifier}{data}")
+                formatted_data = f"{identifier}{data}\n"
+                ser.write(formatted_data.encode("utf-8"))
 	    
 def input_and_send(sock, identifier):
-	while True:
-		data = ser.readline().decode('utf-8').strip()
+    while True:
+        with lock:
+            data = ser.readline().decode('utf-8').strip()
+	    #print(data)
+            if data == "S" or data == "P" or data == "L":
 		#print(data)
-		if data == "S" or data == "P" or data == "L":
-		    #print(data)
-		    formatted_data = f"{identifier}{data}\n"
-		    sock.send(formatted_data.encode('utf-8'))
-		    #sock.send("\n".encode('utf-8'))
-		    ser.flush()  # Asigură-te că buffer-ul serial este golit
+                formatted_data = f"{identifier}{data}\n"
+                sock.send(formatted_data.encode('utf-8'))
+		#sock.send("\n".encode('utf-8'))
+                ser.flush()  # Asigură-te că buffer-ul serial este golit
 
 def read_and_transmit_distance(sock, identifier):
     while True:
@@ -65,7 +67,7 @@ def read_and_transmit_distance(sock, identifier):
 # Conectare la ESP32-urile
 sock1 = connect_to_esp(addr_esp1) #fluier
 sock2 = connect_to_esp(addr_esp2) #inel
-#sock3 = connect_to_esp(addr_esp3) #imu
+sock3 = connect_to_esp(addr_esp3) #imu
 
 # Asigură-te că ambele conexiuni sunt valide
 if sock1 is None or sock2 is None: #or sock3 is None:
