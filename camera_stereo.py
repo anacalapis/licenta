@@ -4,13 +4,19 @@ import cv2
 import numpy as np
 import math
 import threading 
+import time
+from datetime import datetime
 lock = threading.Lock()
 
 def write_distance_to_file(X, Y):
     with lock:
         with open("distanta.txt", "w") as file:
             dist = math.sqrt((round(X, 2) - 50)**2 + (round(Y, 2))**2) #coord inel (50,0)
+            #timestamp = datetime.now().strftime('%H:%M:%S.%f')
             file.write(f'{round(dist,3)}')
+            dist = f"{dist}"
+            cv2.putText(rgbFrame, dist, (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+                                0.7, (0, 255, 0), 2)
 
 
 # Camera resolution
