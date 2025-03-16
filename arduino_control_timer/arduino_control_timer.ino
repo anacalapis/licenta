@@ -1,6 +1,10 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
+#define NR_SEC_SFERT 15   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_PAUZA_MICA 5 //aici se pune cat dorim sa tina o pauza mica in secunde
+#define NR_SEC_PAUZA_MARE 5 //aici se pune cat dorim sa tina o pauza mare in secunde
+
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
@@ -12,13 +16,13 @@ const unsigned long interval = 1000; // Intervalul pentru scăderea timpului (1 
 int timeIntervalCount =0; //numara in ce interval ne aflam, par este sfert, impar pauza
 int nr_sfert=1;
 
-int countDownTime = 10; //in secunde
-int timeQuarter =10;
-int timeSmallBreak =5;
-int timeHalfBreak = 7; 
+int countDownTime = NR_SEC_SFERT; //in secunde
+int timeQuarter =NR_SEC_SFERT ;
+int timeSmallBreak = NR_SEC_PAUZA_MICA;
+int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
 
-String scor = "0";
+String scor;
 
 void setup() 
 {
@@ -29,6 +33,7 @@ void setup()
   lcd.print("Start meci!");
   delay(500); 
   lcd.clear();
+  scor = "0";
 }
 
 void loop() {
@@ -42,7 +47,7 @@ void loop() {
       case 1:
       case 5: 
       {
-        countDownTime = timeSmallBreak;
+        countDownTime = NR_SEC_PAUZA_MICA;
         displayPause();
         break;
       }
@@ -57,7 +62,7 @@ void loop() {
       }
       case 3: 
       {
-        countDownTime = timeHalfBreak;
+        countDownTime = NR_SEC_PAUZA_MARE;
         displayPause();
         break;
       }
@@ -106,14 +111,26 @@ void updateDisplay(int sfert)
 void displayQuarter()
 {
   //Serial.println("S");
-  if(countDownTime==10)
+  if(countDownTime == NR_SEC_SFERT)
   {
+    int minutes = timeQuarter / 60;
+    int secunde = timeQuarter % 60;
     lcd.clear();
     lcd.setCursor(0, 0);
     lcd.print("Sf ");
     lcd.print(nr_sfert);
-    lcd.print("   00:");
-    lcd.print(timeQuarter);
+    lcd.print("   ");
+    if(minutes<10)
+    {
+      lcd.print("0");
+    }
+    lcd.print(minutes);
+    lcd.print(":");
+    if(secunde<10)
+    {
+      lcd.print("0");
+    }
+    lcd.print(secunde);
     displayScor();
     command = Serial.readStringUntil('\n');
     command.trim();
@@ -160,12 +177,24 @@ void displayQuarter()
 void displayPause()
 {
   Serial.println("P");
-  if(countDownTime==timeSmallBreak || countDownTime==timeHalfBreak)
+  int minutes = countDownTime / 60;
+  int secunde = countDownTime % 60;
+  if(countDownTime==NR_SEC_PAUZA_MICA || countDownTime==NR_SEC_PAUZA_MARE)
   {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Pauza 00:0");
-    lcd.print(countDownTime);
+    lcd.print("Pauza  ");
+    if(minutes<10)
+    {
+      lcd.print("0");
+    }
+    lcd.print(minutes);
+    lcd.print(":");
+    if(secunde<10)
+    {
+      lcd.print("0");
+    }
+    lcd.print(secunde);
     displayScor();
 
   }

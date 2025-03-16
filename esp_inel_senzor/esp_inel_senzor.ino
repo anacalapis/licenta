@@ -12,7 +12,7 @@ bool flag;
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
 
-int score = 0;
+int score;
 int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
@@ -25,6 +25,7 @@ void setup() {
   pinMode(SENSOR3_PIN, INPUT_PULLUP);
   Serial.begin(9600);    
   SerialBT.begin("ESP_Inel_Device"); 
+  score=0;
 }
 
 void loop() 
@@ -73,11 +74,15 @@ void loop()
       command += c;  // Adăugăm caracterul la comanda curentă
     }
   }
-  if ((sensor1State == 0 || sensor3State==0) && flag)
+  // if(comanda == 'P')
+  // {
+  //   SerialBT.printf("%d", score);
+  // }
+  if((sensor1State == 0 || sensor3State==0) && flag)
   {
     previousMillis = millis();
     currentMillis = millis();
-    while(currentMillis - previousMillis < 300)
+    while(currentMillis - previousMillis < 700)
     {
       sensor2State = digitalRead(SENSOR2_PIN);
       if(sensor2State == 0)
