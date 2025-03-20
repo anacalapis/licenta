@@ -69,35 +69,17 @@ def just_rx_and_echo(sock):
             #formatted_data = f"{identifier}{data}\n"
             #ser.write(formatted_data.encode("utf-8"))	  
 	      
-def imu_camera(sock_imu, sock_inel, identifier):
+def imu_camera(sock_imu):
     while True:
-        max_samples = 100
-        vector_imu = [0] * max_samples
-        vector_camera= [0] *  max_samples
-        i=0
-       
-        start_timp = datetime.now()
-        while datetime.now() < start_timp + timedelta(seconds=2) and i < max_samples:
             data_imu = sock_imu.recv(buf_size).decode("utf-8")	#vin sub forma de string
-            if data_imu != 0:
-                vector_imu[i] = float(data_imu)
-                #with lock:
+            if data_imu:
+                vector_imu = data_imu
                 with open("distanta.txt", "r") as file:
                         continut = file.read()
                         if continut:
-                            vector_camera[i] = float(continut)
-                i += 1
-            #i += 1
-            time.sleep(0.1)
-        maxim = 0
-        index=0
-        for j in range(i):
-            if vector_imu[j] > maxim:
-                maxim = vector_imu[j]
-                index = j
-            print(f"{vector_imu[j]}->{vector_camera[j]}")
-        formatted_data = f"{identifier}{vector_camera[index]}\n"
-        sock_inel.send(formatted_data.encode('utf-8'))
+                            vector_camera = float(continut)
+                            print(f"{vector_imu}->{vector_camera}")
+        
 	
 def camera():
     #global data_camera
@@ -124,7 +106,7 @@ def camera():
                         #print(f"{vector_imu}->{vector_camera}")
                         #formatted_data = f"{identifier}{vector_camera}\n"
                         #sock_inel.send(formatted_data.encode('utf-8'))
-	    #time.sleep(0.2)
+	    time.sleep(0.05)
 def corelare_imu_camera():
     #global data_imu, data_camera
     toleranta = 500
@@ -188,24 +170,24 @@ if sock1 is None or sock2 is None or sock3 is None:
 thread1 = threading.Thread(target=rx_and_echo, args=(sock1, 0))  # fluier
 thread2 = threading.Thread(target=rx_and_echo, args=(sock2, 1))  # inel
 thread3 = threading.Thread(target=input_and_send, args=(sock2,3))  # trimitere semnal pauza
-thread4 = threading.Thread(target=just_rx_and_echo, args=(sock3, ))  # vedem ce iese de la imu
-thread5 = threading.Thread(target=corelare_imu_camera)	#datele de la imu
-thread6 = threading.Thread(target=camera) 
+#thread4 = threading.Thread(target=just_rx_and_echo, args=(sock3, ))  # vedem ce iese de la imu
+thread5 = threading.Thread(target=imu_camera, args=(sock3, ))	#datele de la imu
+#thread6 = threading.Thread(target=camera) 
 
 thread1.start()
 thread2.start()
 thread3.start()
-thread4.start()
+#thread4.start()
 thread5.start()
-thread6.start()
+#thread6.start()
 
 # Așteaptă terminarea firelor
 thread1.join()
 thread2.join()
 thread3.join()
-thread4.join()
+#thread4.join()
 thread5.join()
-thread6.join()
+#thread6.join()
 
 # Închide conexiunile
 sock1.close()
