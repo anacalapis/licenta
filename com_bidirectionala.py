@@ -14,11 +14,13 @@ vector_imu = [0] * buffer_size
 
 data_imu = []
 data_camera = []
+#global data_imu, data_camera
 
 # Adresele ESP32
 addr_esp1 = "A0:A3:B3:97:55:46" #fluier
 addr_esp2 = "A0:A3:B3:96:69:6A" #inel
-addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
+#addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
+addr_esp3 = "D4:8A:FC:A2:45:4E"
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
@@ -50,17 +52,20 @@ def rx_and_echo(sock, identifier):
             ser.write(formatted_data.encode("utf-8"))
 	    
 def just_rx_and_echo(sock):
+    #global data_imu
     index_i =0
     while True:
 	#with lock:
         data = sock.recv(buf_size)
         if data:
+            data = data.decode("utf-8")
             #vector_imu[index_i % buffer_size]= data.decode("utf-8")
             #print(f"I {vector_imu[index_i % buffer_size]}")
             #index_i +=1
             timp = datetime.now().strftime("%H:%M:%S.%f")
+            #print(f"IMUUUU {timp} - {data}")
             data_imu.append((timp, data))
-            #print(f"IMUUUU {time} - {data}")
+            #print(f"IMUUUU {timp} - {data}")
             #formatted_data = f"{identifier}{data}\n"
             #ser.write(formatted_data.encode("utf-8"))	  
 	      
@@ -95,28 +100,34 @@ def imu_camera(sock_imu, sock_inel, identifier):
         sock_inel.send(formatted_data.encode('utf-8'))
 	
 def camera():
-    index_c = 0
+    #global data_camera
     continut_vechi = None
     while True:
             #with lock:
+	    try:
                 with open("distanta.txt", "r") as file:
-                    continut = file.read()
+                    continut = file.read().strip()
                     if continut != continut_vechi:
                         #vector_camera[index_c % buffer_size] = continut
                         continut_vechi = continut
                         #print(f"C{vector_camera[index_c % buffer_size]}")
                         timp = datetime.now().strftime("%H:%M:%S.%f")
+                        #with lock:
+                        #print(f"C{timp} - {continut}")
                         data_camera.append((timp, continut))
-                        #print(f"C{time} - {continut}")
+                        
+	    except Exception as e:
+                print("ex")
 			
                         #index_c +=1
                         #print(f"C{vector_camera}")
                         #print(f"{vector_imu}->{vector_camera}")
                         #formatted_data = f"{identifier}{vector_camera}\n"
                         #sock_inel.send(formatted_data.encode('utf-8'))
-        #time.sleep(0.1)
+	    #time.sleep(0.2)
 def corelare_imu_camera():
-    toleranta = 100
+    #global data_imu, data_camera
+    toleranta = 500
     while True:
         if data_imu and data_camera:
             print("alo")
@@ -130,12 +141,13 @@ def corelare_imu_camera():
             camera_timp = datetime.strptime(camera_timp, "%H:%M:%S.%f")
 	    
             diferenta = abs((imu_timp - camera_timp).total_seconds() * 1000)
-	    
+            print(f"{imu_timp} - cam {camera_timp}")
+            print(diferenta)
             if diferenta<=toleranta:
                 print(f"da {imu_val} {camera_val}")
             else:
                 print("nu")
-        time.sleep(0.08)
+        #time.sleep(0.08)
 	    
 def input_and_send(sock, identifier):
     while True:
