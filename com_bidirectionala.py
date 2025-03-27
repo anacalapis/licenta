@@ -12,15 +12,16 @@ buffer_size = 5
 vector_camera = [0] * buffer_size
 vector_imu = [0] * buffer_size
 
-data_imu = []
-data_camera = []
+#data_imu = []
+#data_camera = []
 #global data_imu, data_camera
 
 # Adresele ESP32
 addr_esp1 = "A0:A3:B3:97:55:46" #fluier
 addr_esp2 = "A0:A3:B3:96:69:6A" #inel
 #addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
-addr_esp3 = "D4:8A:FC:A2:45:4E"
+#addr_esp3 = "D4:8A:FC:A2:45:4E"
+addr_esp3 = "A0:A3:B3:97:4A:56"
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 
@@ -70,15 +71,33 @@ def just_rx_and_echo(sock):
             #ser.write(formatted_data.encode("utf-8"))	  
 	      
 def imu_camera(sock_imu):
+    start_timp = datetime.now()
+    i=0
     while True:
+        if (datetime.now() - start_timp).seconds <2:
             data_imu = sock_imu.recv(buf_size).decode("utf-8")	#vin sub forma de string
             if data_imu:
-                vector_imu = data_imu
+                vector_imu[i] = data_imu
                 with open("distanta.txt", "r") as file:
                         continut = file.read()
                         if continut:
-                            vector_camera = float(continut)
-                            print(f"{vector_imu}->{vector_camera}")
+                            vector_camera[i] = float(continut)
+                            print(f"{vector_imu[i]}->{vector_camera[i]}")
+                            i+=1
+        else:
+            val_max= 0
+            index=0
+            for x in range(i):
+                if int(vector_imu[x]) > int(val_max):
+                    val_max=vector_imu[x]
+                    index=x
+            print(f"FFFFF {vector_imu[index]}->{vector_camera[index]}")
+            i=0
+            start_timp = datetime.now() 
+            
+            
+        
+             
         
 	
 def camera():
@@ -161,7 +180,7 @@ sock2 = connect_to_esp(addr_esp2) #inel
 sock3 = connect_to_esp(addr_esp3) #imu
 
 # Asigură-te că ambele conexiuni sunt valide
-if sock1 is None or sock2 is None or sock3 is None:
+if sock1 is None or sock2 is None: #or sock3 is None:
     print("Failed to connect to ESP32 devices.")
     exit(1)
 
