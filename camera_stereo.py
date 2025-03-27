@@ -199,6 +199,7 @@ with dai.Device(pipeline) as device:
                                         
                                         text = f"Position: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"
                                         write_distance_to_file(abs(X), abs(Y))
+                                        time.sleep(0.085)
                                         cv2.putText(rgbFrame, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
                                                     0.7, (255, 165, 0), 2)  # Orange text for backup method
                                         
