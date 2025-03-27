@@ -23,10 +23,14 @@ void setup() {
   Wire.setClock(400000);
   Wire.begin();
   delay(250);
-  Wire.beginTransmission(0x68); //începe o transmisie către dispozitivul I2C cu adresa 0x68,
-  Wire.write(0x6B);             //gestionarea alimentării senzorului
-  Wire.write(0x00);             //senzorul va ieși din modul de repaus și va începe să fie activ
-  Wire.endTransmission();
+  // Wire.beginTransmission(0x68); //începe o transmisie către dispozitivul I2C cu adresa 0x68,
+  // Wire.write(0x6B);             //gestionarea alimentării senzorului
+  // Wire.write(0x00);             //senzorul va ieși din modul de repaus și va începe să fie activ
+  // Wire.endTransmission();
+  if (!imuu.begin()) {
+  Serial.println("Eroare IMU!");
+  while (1);
+}
 
   // imuu.setAccelerometerRange(MPU6050_RANGE_8_G);
   // imuu.setGyroRange(MPU6050_RANGE_500_DEG);
@@ -57,7 +61,8 @@ void loop()
     }
     
   }
-  delay(80);
+  //SerialBT.println("1");
+  delay(85);
 }
 
 

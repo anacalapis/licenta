@@ -3,6 +3,7 @@
 #define SENSOR2_PIN 23 
 #define SENSOR3_PIN 18
 
+#define TREI_PUNCTE 50 
 BluetoothSerial SerialBT;
 
 String command = "";
@@ -95,7 +96,7 @@ void loop()
         }
         if(comanda == 'S')
         {
-          if(distanta <= 50)
+          if(distanta <= TREI_PUNCTE)
           {
             score = score+2;
           }
