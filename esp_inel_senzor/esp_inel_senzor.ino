@@ -9,6 +9,7 @@ BluetoothSerial SerialBT;
 String command = "";
 int distanta =0;
 bool flag;
+int ultima_aruncare;
 
 unsigned long currentMillis = 0;
 unsigned long previousMillis = 0;
@@ -18,6 +19,7 @@ int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
 
+bool aruncare_libera;
 char comanda;
 
 void setup() {
@@ -27,10 +29,17 @@ void setup() {
   Serial.begin(9600);    
   SerialBT.begin("ESP_Inel_Device"); 
   score=0;
+  ultima_aruncare =0;
 }
 
 void loop() 
 {
+  if (command.equals("RESET")) 
+  {
+  score = 0;
+  ultima_aruncare = 0;
+  command = ""; 
+}
   sensor1State = digitalRead(SENSOR1_PIN); 
   sensor3State = digitalRead(SENSOR3_PIN);
   while (SerialBT.available()) {
@@ -58,6 +67,17 @@ void loop()
           flag = true;
           comanda = 'L';
           Serial.println("Received L");
+        }
+        if (sir.equals("D")) 
+        {
+          comanda = 'D';
+          Serial.println("Received D");
+        }
+        if (sir.equals("d")) 
+        {
+          comanda = 'd';
+          flag = true;
+          Serial.println("Received d");
         }
       }
       if(command[0]=='4')
@@ -88,9 +108,10 @@ void loop()
       sensor2State = digitalRead(SENSOR2_PIN);
       if(sensor2State == 0)
       { 
-        if(comanda == 'L')
+        if(comanda == 'L' ||  comanda == 'd')
         {
           score++;
+          ultima_aruncare = 1;
           SerialBT.printf("%d", score);
           break;
         }
@@ -99,10 +120,12 @@ void loop()
           if(distanta <= TREI_PUNCTE)
           {
             score = score+2;
+            ultima_aruncare = 2;
           }
           else
           {
             score = score+3;
+            ultima_aruncare = 3;
           }
           //score=score+2;
           SerialBT.printf("%d", score);
@@ -114,6 +137,13 @@ void loop()
       currentMillis = millis();
     }
   }
+ if(comanda == 'D')
+  {
+    score = score - ultima_aruncare;
+    ultima_aruncare = 0;
+  }
+  
+  
   // Serial.print("senz1 ");
   //Serial.print(sensor1State);
   //Serial.print("senz2 ");

@@ -22,7 +22,7 @@ int timeSmallBreak = NR_SEC_PAUZA_MICA;
 int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
 
-String scor;
+int scor=0;
 
 void setup() 
 {
@@ -33,11 +33,11 @@ void setup()
   lcd.print("Start meci!");
   delay(500); 
   lcd.clear();
-  scor = "0";
+  scor = 0;
 }
 
 void loop() {
-  
+   
   displayQuarter();
   if (countDownTime <= 0) 
   {
@@ -135,13 +135,19 @@ void displayQuarter()
     command = Serial.readStringUntil('\n');
     command.trim();
     
-    while(!command.equals("00"))
+    while(!command.equals("00"))    // e inceput de sfert si se asteapta ca timpul sa porneasca
     {
       command = Serial.readStringUntil('\n');
       command.trim();
+      if (command.equals("04")) 
+      {
+        Serial.println("D");
+        delay(100); 
+        displayScor();
+      }
     }
   }
-  while(countDownTime !=0)
+  while(countDownTime !=0)  //suntem in timpul sfertului
   {
 
     command = Serial.readStringUntil('\n');
@@ -161,7 +167,7 @@ void displayQuarter()
       isPaused = false; // Reia timpul
       delay(100); 
     }
-    if (!isPaused) 
+    if (!isPaused)  //curge timpul in timpul sfertului
     {
       unsigned long currentMillis = millis();
       if (currentMillis - previousMillis >= interval && countDownTime > 0)
@@ -169,6 +175,17 @@ void displayQuarter()
         previousMillis = currentMillis; // Actualizează timpul anterior
         countDownTime--; // Scade timpul rămas
         updateDisplay(nr_sfert); 
+      }
+    }
+    else  //suntem in perioada aruncarilor libere
+    {
+      if (command.equals("04")) 
+      {
+        Serial.println("D");
+        delay(100); 
+        displayScor();
+        Serial.println("d");
+
       }
     }
   }
@@ -195,12 +212,22 @@ void displayPause()
       lcd.print("0");
     }
     lcd.print(secunde);
+    
     displayScor();
 
   }
   while(countDownTime!=0)
   {
     unsigned long currentMillis = millis();
+    command = Serial.readStringUntil('\n');
+    command.trim();
+    if (command.equals("04")) 
+    {
+      Serial.println("D");
+      //isPaused = false; // Reia timpul
+      delay(100); 
+      displayScor();
+    }
       if (currentMillis - previousMillis >= interval && countDownTime > 0) 
       {
         previousMillis = currentMillis; // Actualizează timpul anterior
@@ -219,18 +246,8 @@ void displayScor()
   //lcd.print(command);
   if(command.startsWith("1"))
   {
-    scor = command.substring(1);
-    lcd.print(scor);
+    scor =atoi(command.substring(1).c_str());
   }
-  else
-  {
-    lcd.print(scor);
-  }
+  lcd.print(scor);
   
-  // else
-  // {
-  //   command = Serial.readStringUntil('\n');
-  //   command.trim();
-  //   lcd.print(command.substring(1));
-  // }
 }
