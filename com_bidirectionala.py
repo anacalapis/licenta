@@ -24,7 +24,7 @@ addr_esp2 = "A0:A3:B3:96:69:6A" #inel
 addr_esp3 = "A0:A3:B3:97:4A:56"
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
-
+#time.sleep(2)
 # Funcție pentru conectarea unui dispozitiv
 def connect_to_esp(addr):
     service_matches = find_service(address=addr)
@@ -51,7 +51,7 @@ def rx_and_echo(sock, identifier):
 	    #print(f"{identifier}{data}")
             formatted_data = f"{identifier}{data}\n"
             ser.write(formatted_data.encode("utf-8"))
-	    
+	     
 def just_rx_and_echo(sock):
     #global data_imu
     index_i =0
@@ -95,11 +95,6 @@ def imu_camera(sock_imu):
             i=0
             start_timp = datetime.now() 
             
-            
-        
-             
-        
-	
 def camera():
     #global data_camera
     continut_vechi = None
@@ -155,8 +150,8 @@ def input_and_send(sock, identifier):
         with lock:
             data = ser.readline().decode('utf-8').strip()
 	    #print(data)
-            if data == "S" or data == "P" or data == "L":
-		#print(data)
+            if data == "S" or data == "P" or data == "L" or data == "D" or data == "d":
+                #print(data)
                 formatted_data = f"{identifier}{data}\n"
                 sock.send(formatted_data.encode('utf-8'))
 		#sock.send("\n".encode('utf-8'))
@@ -179,8 +174,10 @@ sock1 = connect_to_esp(addr_esp1) #fluier
 sock2 = connect_to_esp(addr_esp2) #inel
 sock3 = connect_to_esp(addr_esp3) #imu
 
+sock2.send("RESET")
+
 # Asigură-te că ambele conexiuni sunt valide
-if sock1 is None or sock2 is None: #or sock3 is None:
+if sock1 is None or sock2 is None or sock3 is None:
     print("Failed to connect to ESP32 devices.")
     exit(1)
 
