@@ -1,7 +1,7 @@
 #include <BluetoothSerial.h>
 #define SENSOR1_PIN 22 
 #define SENSOR2_PIN 23 
-#define SENSOR3_PIN 18
+#define SENSOR3_PIN 19
 
 #define TREI_PUNCTE 50 
 BluetoothSerial SerialBT;
@@ -19,7 +19,6 @@ int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
 
-bool aruncare_libera;
 char comanda;
 
 void setup() {
@@ -27,7 +26,7 @@ void setup() {
   pinMode(SENSOR2_PIN, INPUT_PULLUP); 
   pinMode(SENSOR3_PIN, INPUT_PULLUP);
   Serial.begin(9600);    
-  SerialBT.begin("ESP_Inel_Device"); 
+  SerialBT.begin("ESP_Inel2_Device"); 
   score=0;
   ultima_aruncare =0;
 }
@@ -41,7 +40,7 @@ void loop()
   command = ""; 
 }
   sensor1State = digitalRead(SENSOR1_PIN); 
-  sensor3State = digitalRead(SENSOR3_PIN);
+  sensor2State = digitalRead(SENSOR2_PIN);
   while (SerialBT.available()) {
     char c = SerialBT.read();  // Citim câte un caracter
     if (c == '\n') {  // Dacă am primit un caracter de sfârșit de linie, procesăm comanda
@@ -68,16 +67,16 @@ void loop()
           comanda = 'L';
           Serial.println("Received L");
         }
-        if (sir.equals("A")) 
+        if (sir.equals("B")) 
         {
-          comanda = 'A';
-          Serial.println("Received A");
+          comanda = 'B';
+          Serial.println("Received B");
         }
-        if (sir.equals("a")) 
+        if (sir.equals("b")) 
         {
-          comanda = 'a';
+          comanda = 'b';
           flag = true;
-          Serial.println("Received a");
+          Serial.println("Received b");
         }
       }
       if(command[0]=='4')
@@ -89,26 +88,23 @@ void loop()
       }
       
       command = "";  // Resetăm comanda pentru următoarea citire
+      
     } 
     else 
     {
       command += c;  // Adăugăm caracterul la comanda curentă
     }
   }
-  // if(comanda == 'P')
-  // {
-  //   SerialBT.printf("%d", score);
-  // }
-  if((sensor1State == 0 || sensor3State==0) && flag)
+  if((sensor1State == 0 || sensor2State==0) && flag)
   {
     previousMillis = millis();
     currentMillis = millis();
     while(currentMillis - previousMillis < 700)
     {
-      sensor2State = digitalRead(SENSOR2_PIN);
-      if(sensor2State == 0)
+      sensor3State = digitalRead(SENSOR3_PIN);
+      if(sensor3State == 0)
       { 
-        if(comanda == 'L' ||  comanda == 'a')
+        if(comanda == 'L' ||  comanda == 'b')
         {
           score++;
           ultima_aruncare = 1;
@@ -137,20 +133,23 @@ void loop()
       currentMillis = millis();
     }
   }
- if(comanda =='A')
+ if(comanda == 'B')
   {
     score = score - ultima_aruncare;
     ultima_aruncare = 0;
-  }
+ }
   
-  
+  // sensor1State = digitalRead(SENSOR1_PIN); 
+  // sensor2State = digitalRead(SENSOR2_PIN);
+  // sensor3State = digitalRead(SENSOR3_PIN);
   // Serial.print("senz1 ");
-  //Serial.print(sensor1State);
-  //Serial.print("senz2 ");
-  //Serial.println(sensor2State);
-  // Serial.print("senz3 ");
-  //Serial.println(sensor3State);
-  //Serial.print("        score ");
+  // Serial.print(sensor1State);
+  // Serial.print("  senz2 ");
+  // Serial.print(sensor2State);
+  // Serial.print("  senz3 ");
+  // Serial.println(sensor3State);
+  // Serial.print("        score ");
   SerialBT.printf("%d", score);
+  // score ++;
   delay(50); 
 }

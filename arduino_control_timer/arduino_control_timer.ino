@@ -22,8 +22,12 @@ int timeSmallBreak = NR_SEC_PAUZA_MICA;
 int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
 
-int scor=0;
+int scor1=0, scor2=0;
+int curent_scor1 =0, anterior_scor1=0;
+int curent_scor2 =0, anterior_scor2=0;
 
+int ultim_scor_marcat; //daca este 1, semnifica ca ultimul cos a fost marcat de echipa A
+                        //daca este 2, semnifica ca ultimul cos a fost marcat de echipa B
 void setup() 
 {
   Serial.begin(9600);
@@ -33,7 +37,7 @@ void setup()
   lcd.print("Start meci!");
   delay(500); 
   lcd.clear();
-  scor = 0;
+  //ultim_scor_marcat=0;
 }
 
 void loop() {
@@ -141,7 +145,14 @@ void displayQuarter()
       command.trim();
       if (command.equals("04")) 
       {
-        Serial.println("D");
+        if(ultim_scor_marcat == 1)
+        {
+          Serial.println("A");
+        }
+        else //if(ultim_scor_marcat == 2)
+        {
+          Serial.println("B");
+        }
         delay(100); 
         displayScor();
       }
@@ -181,11 +192,25 @@ void displayQuarter()
     {
       if (command.equals("04")) 
       {
-        Serial.println("D");
+        //Serial.println("D");
+        if(ultim_scor_marcat == 1)
+        {
+          Serial.println("A");
+        }
+        else
+        {
+          Serial.println("B");
+        }
         delay(100); 
         displayScor();
-        Serial.println("d");
-
+        if(ultim_scor_marcat == 1)
+        {
+          Serial.println("a");
+        }
+        else  //if(ultim_scor_marcat == 2)
+        {
+          Serial.println("b");
+        }
       }
     }
   }
@@ -223,7 +248,15 @@ void displayPause()
     command.trim();
     if (command.equals("04")) 
     {
-      Serial.println("D");
+      //Serial.println("D");
+      if(ultim_scor_marcat == 1)
+        {
+          Serial.println("A");
+        }
+      else //(ultim_scor_marcat == 2)
+        {
+          Serial.println("B");
+        }
       //isPaused = false; // Reia timpul
       delay(100); 
       displayScor();
@@ -240,14 +273,32 @@ void displayPause()
 void displayScor()
 {
   lcd.setCursor(0, 1);
-  lcd.print("Scor  ");
+  lcd.print("EchA ");
   command = Serial.readStringUntil('\n');
   command.trim();
   //lcd.print(command);
   if(command.startsWith("1"))
   {
-    scor =atoi(command.substring(1).c_str());
+    curent_scor1 =atoi(command.substring(1).c_str());
+    if(anterior_scor1 != curent_scor1)
+    {
+      ultim_scor_marcat =1;
+    }
+    anterior_scor1=curent_scor1;
   }
-  lcd.print(scor);
+  
+  if(command.startsWith("2"))
+  {
+    curent_scor2 =atoi(command.substring(1).c_str());
+    if(anterior_scor2 != curent_scor2)
+    {
+      ultim_scor_marcat =2;
+    }
+    anterior_scor2=curent_scor2;
+  }
+  lcd.print(curent_scor1);
+  lcd.print("-");
+  lcd.print(curent_scor2);
+  lcd.print(" EchB");
   
 }
