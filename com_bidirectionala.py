@@ -18,10 +18,11 @@ vector_imu = [0] * buffer_size
 
 # Adresele ESP32
 addr_esp1 = "A0:A3:B3:97:55:46" #fluier
-addr_esp2 = "A0:A3:B3:96:69:6A" #inel
+addr_esp2 = "A0:A3:B3:96:69:6A" #inel1
 #addr_esp3 = "CC:DB:A7:98:C1:8A" #imu
 #addr_esp3 = "D4:8A:FC:A2:45:4E"
-addr_esp3 = "A0:A3:B3:97:4A:56"
+addr_esp3 = "A0:A3:B3:97:4A:56" #imu
+addr_esp4 = "D4:8A:FC:A2:70:5A" #inel2
 
 ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1)
 #time.sleep(2)
@@ -48,7 +49,7 @@ def rx_and_echo(sock, identifier):
         data = sock.recv(buf_size)
         if data:
             data = data.decode("utf-8")
-	    #print(f"{identifier}{data}")
+            #print(f"{identifier}{data}")
             formatted_data = f"{identifier}{data}\n"
             ser.write(formatted_data.encode("utf-8"))
 	     
@@ -145,15 +146,16 @@ def corelare_imu_camera():
                 print("nu")
         #time.sleep(0.08)
 	    
-def input_and_send(sock, identifier):
+def input_and_send(sock1, sock2, identifier):
     while True:
         with lock:
             data = ser.readline().decode('utf-8').strip()
 	    #print(data)
-            if data == "S" or data == "P" or data == "L" or data == "D" or data == "d":
+            if data == "S" or data == "P" or data == "L" or data == "A" or data == "B" or data == "a" or data == "b":
                 #print(data)
                 formatted_data = f"{identifier}{data}\n"
-                sock.send(formatted_data.encode('utf-8'))
+                sock1.send(formatted_data.encode('utf-8'))
+                sock2.send(formatted_data.encode('utf-8'))
 		#sock.send("\n".encode('utf-8'))
                 ser.flush()  # Asigură-te că buffer-ul serial este golit
 
@@ -171,13 +173,16 @@ def read_and_transmit_distance(sock, identifier):
 	
 # Conectare la ESP32-urile
 sock1 = connect_to_esp(addr_esp1) #fluier
-sock2 = connect_to_esp(addr_esp2) #inel
-sock3 = connect_to_esp(addr_esp3) #imu
+sock2 = connect_to_esp(addr_esp2) #inel1
+#sock3 = connect_to_esp(addr_esp3) #imu
+sock4 = connect_to_esp(addr_esp4) #inel2
 
 sock2.send("RESET")
+sock4.send("RESET")
+
 
 # Asigură-te că ambele conexiuni sunt valide
-if sock1 is None or sock2 is None or sock3 is None:
+if sock1 is None or sock2 is None or sock4 is None: # or sock4 is None:
     print("Failed to connect to ESP32 devices.")
     exit(1)
 
@@ -185,27 +190,28 @@ if sock1 is None or sock2 is None or sock3 is None:
 # Creează fire de execuție pentru fiecare ESP32
 thread1 = threading.Thread(target=rx_and_echo, args=(sock1, 0))  # fluier
 thread2 = threading.Thread(target=rx_and_echo, args=(sock2, 1))  # inel
-thread3 = threading.Thread(target=input_and_send, args=(sock2,3))  # trimitere semnal pauza
-#thread4 = threading.Thread(target=just_rx_and_echo, args=(sock3, ))  # vedem ce iese de la imu
-thread5 = threading.Thread(target=imu_camera, args=(sock3, ))	#datele de la imu
+thread3 = threading.Thread(target=input_and_send, args=(sock2, sock4,3))  # trimitere semnal pauza
+thread4 = threading.Thread(target=rx_and_echo, args=(sock4, 2))     #trimitem datele de la inel2 la arduino 
+#thread5 = threading.Thread(target=imu_camera, args=(sock3, ))	#datele de la imu
 #thread6 = threading.Thread(target=camera) 
 
 thread1.start()
 thread2.start()
 thread3.start()
-#thread4.start()
-thread5.start()
+thread4.start()
+#thread5.start()
 #thread6.start()
 
 # Așteaptă terminarea firelor
 thread1.join()
 thread2.join()
 thread3.join()
-#thread4.join()
-thread5.join()
+thread4.join()
+#thread5.join()
 #thread6.join()
 
 # Închide conexiunile
 sock1.close()
 sock2.close()
-sock3.close()
+#sock3.close()
+sock4.close()
