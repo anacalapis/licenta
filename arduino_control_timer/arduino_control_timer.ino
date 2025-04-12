@@ -1,10 +1,10 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define NR_SEC_SFERT 15   //aici se pune cat dorim sa tina un sfert in secunde
-#define NR_SEC_PAUZA_MICA 5 //aici se pune cat dorim sa tina o pauza mica in secunde
-#define NR_SEC_PAUZA_MARE 5 //aici se pune cat dorim sa tina o pauza mare in secunde
-
+#define NR_SEC_SFERT 5   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_PAUZA_MICA 3 //aici se pune cat dorim sa tina o pauza mica in secunde
+#define NR_SEC_PAUZA_MARE 3 //aici se pune cat dorim sa tina o pauza mare in secunde
+#define NR_SEC_OVERTIME 10
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
@@ -15,9 +15,11 @@ const unsigned long interval = 1000; // Intervalul pentru scăderea timpului (1 
 
 int timeIntervalCount =0; //numara in ce interval ne aflam, par este sfert, impar pauza
 int nr_sfert=1;
-
+int nr_overtime =0;
+bool overtime = false;
 int countDownTime = NR_SEC_SFERT; //in secunde
 int timeQuarter =NR_SEC_SFERT ;
+int timeOvertime = NR_SEC_OVERTIME;
 int timeSmallBreak = NR_SEC_PAUZA_MICA;
 int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
@@ -34,7 +36,7 @@ void setup()
   lcd.init();
   lcd.backlight();
   lcd.setCursor(0, 0);
-  lcd.print("Start meci!");
+  lcd.print("  Start meci!");
   delay(500); 
   lcd.clear();
   //ultim_scor_marcat=0;
@@ -48,16 +50,16 @@ void loop() {
     timeIntervalCount ++;
     switch(timeIntervalCount)
     {
-      case 1:
-      case 5: 
+      case 1:   //pauza dintre primul si al doilea sfert
+      case 5:   //pauza dintre al treiea si al patrulea sfert
       {
         countDownTime = NR_SEC_PAUZA_MICA;
         displayPause();
         break;
       }
-      case 2:
-      case 4:
-      case 6: 
+      case 2:   //sfertul 2
+      case 4:   //sfertul 3
+      case 6:   //sfertul 4
       {
         countDownTime = timeQuarter;
         nr_sfert++;
@@ -70,8 +72,32 @@ void loop() {
         displayPause();
         break;
       }
-      case 7:
+      case 7:   //situatia de overtime
       {
+        while(curent_scor1 == curent_scor2)
+        {
+          overtime = true;
+
+          countDownTime = NR_SEC_PAUZA_MICA;
+          displayPause();
+
+          countDownTime = timeOvertime;
+          nr_overtime++;
+          displayQuarter();
+          
+        }
+        break;
+      }
+      case 8:   //finalul meciului
+      {
+        lcd.setCursor(0, 0);
+        lcd.print(" Final de meci!");
+        lcd.setCursor(0, 1);
+        lcd.print("EchA ");
+        lcd.print(curent_scor1);
+        lcd.print("-");
+        lcd.print(curent_scor2);
+        lcd.print(" EchB");
         while(true);
       }
     }
@@ -82,8 +108,7 @@ void loop() {
 void updateDisplay(int sfert) 
 {
   int minutes = countDownTime / 60;
-  int seconds = countDownTime % 60; 
-
+  int secunde = countDownTime % 60;
   lcd.clear();
   lcd.setCursor(0, 0);
   if(sfert == 0)
@@ -92,8 +117,16 @@ void updateDisplay(int sfert)
   }
   else
   {
-    lcd.print("Sf ");
-    lcd.print(sfert);
+    if(overtime)
+    {
+      lcd.print("OT ");
+      lcd.print(sfert);
+    }
+    else
+    {
+      lcd.print("Sf ");
+      lcd.print(sfert);
+    }
     lcd.print(":   ");
   }
   //lcd.setCursor(0, 1);
@@ -104,26 +137,44 @@ void updateDisplay(int sfert)
   }
   lcd.print(minutes);
   lcd.print(":");
-  if (seconds < 10) 
+  if (secunde < 10) 
   {
     lcd.print("0");
   }
-  lcd.print(seconds);
+  lcd.print(secunde);
   displayScor();
 }
 
 void displayQuarter()
 {
   //Serial.println("S");
-  if(countDownTime == NR_SEC_SFERT)
+  //if(((countDownTime == NR_SEC_SFERT) && (overtime == false)) || ((countDownTime == NR_SEC_OVERTIME) && (overtime == true)))
+  if(countDownTime == NR_SEC_SFERT || countDownTime == NR_SEC_OVERTIME)
   {
-    int minutes = timeQuarter / 60;
-    int secunde = timeQuarter % 60;
+    int minutes, secunde;
+    if(overtime)
+    {
+      minutes = timeOvertime / 60;
+      secunde = timeOvertime % 60;
+    }
+    else
+    {
+      minutes = timeQuarter / 60;
+      secunde = timeQuarter % 60;
+    }
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Sf ");
-    lcd.print(nr_sfert);
-    lcd.print("   ");
+    if (overtime)
+    {
+      lcd.print("OT ");
+      lcd.print(nr_overtime);
+    }
+    else
+    {
+      lcd.print("Sf ");
+      lcd.print(nr_sfert);
+    }
+    lcd.print("    ");
     if(minutes<10)
     {
       lcd.print("0");
@@ -185,7 +236,15 @@ void displayQuarter()
       {
         previousMillis = currentMillis; // Actualizează timpul anterior
         countDownTime--; // Scade timpul rămas
-        updateDisplay(nr_sfert); 
+        if(overtime)
+        {
+          updateDisplay(nr_overtime); 
+        }
+        else
+        {
+          updateDisplay(nr_sfert); 
+        }
+        
       }
     }
     else  //suntem in perioada aruncarilor libere
@@ -225,7 +284,7 @@ void displayPause()
   {
     lcd.clear();
     lcd.setCursor(0, 0);
-    lcd.print("Pauza  ");
+    lcd.print("Pauza   ");
     if(minutes<10)
     {
       lcd.print("0");
@@ -272,8 +331,6 @@ void displayPause()
 
 void displayScor()
 {
-  lcd.setCursor(0, 1);
-  lcd.print("EchA ");
   command = Serial.readStringUntil('\n');
   command.trim();
   //lcd.print(command);
@@ -296,6 +353,8 @@ void displayScor()
     }
     anterior_scor2=curent_scor2;
   }
+  lcd.setCursor(0, 1);
+  lcd.print("EchA ");
   lcd.print(curent_scor1);
   lcd.print("-");
   lcd.print(curent_scor2);
