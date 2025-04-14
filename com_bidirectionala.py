@@ -150,8 +150,8 @@ def input_and_send(sock1, sock2, identifier):
     while True:
         with lock:
             data = ser.readline().decode('utf-8').strip()
-	    #print(data)
-            if data == "S" or data == "P" or data == "L" or data == "A" or data == "B" or data == "a" or data == "b":
+            print(data)
+            if data == "S" or data == "P" or data == "L" or data == "A" or data == "B" or data == "a" or data == "b" or data.startswith("H"):
                 #print(data)
                 formatted_data = f"{identifier}{data}\n"
                 sock1.send(formatted_data.encode('utf-8'))
