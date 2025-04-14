@@ -46,7 +46,7 @@ void loop()
     char c = SerialBT.read();  // Citim câte un caracter
     if (c == '\n') {  // Dacă am primit un caracter de sfârșit de linie, procesăm comanda
       command.trim();  // Eliminăm orice spațiu sau \n la începutul și sfârșitul comenzii
-      //Serial.println(command[0]);
+      //Serial.println(command);
       if(command[0]=='3')
       {
         String sir = String(command.c_str() +1); 
@@ -78,6 +78,17 @@ void loop()
           comanda = 'a';
           flag = true;
           Serial.println("Received a");
+        }
+        String subsir = command.substring(1);
+        if(subsir.startsWith("H"))
+        {
+          Serial.print("ajuns");
+          //int start = subsir.indexOf('*');
+          int start = subsir.indexOf('-');
+          String val = subsir.substring(start+1);
+          score = val.toInt();
+          Serial.print("nou ");
+          Serial.println(score);
         }
       }
       if(command[0]=='4')
@@ -142,15 +153,6 @@ void loop()
     score = score - ultima_aruncare;
     ultima_aruncare = 0;
   }
-  
-  
-  // Serial.print("senz1 ");
-  //Serial.print(sensor1State);
-  //Serial.print("senz2 ");
-  //Serial.println(sensor2State);
-  // Serial.print("senz3 ");
-  //Serial.println(sensor3State);
-  //Serial.print("        score ");
   SerialBT.printf("%d", score);
   delay(50); 
 }

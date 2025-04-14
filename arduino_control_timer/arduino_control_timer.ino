@@ -39,7 +39,6 @@ void setup()
   lcd.print("  Start meci!");
   delay(500); 
   lcd.clear();
-  //ultim_scor_marcat=0;
 }
 
 void loop() {
@@ -70,6 +69,11 @@ void loop() {
       {
         countDownTime = NR_SEC_PAUZA_MARE;
         displayPause();
+        Serial.print("H*");
+        Serial.print(curent_scor1);
+        Serial.print("-");
+        Serial.println(curent_scor2);
+        
         break;
       }
       case 7:   //situatia de overtime
@@ -94,9 +98,9 @@ void loop() {
         lcd.print(" Final de meci!");
         lcd.setCursor(0, 1);
         lcd.print("EchA ");
-        lcd.print(curent_scor1);
-        lcd.print("-");
         lcd.print(curent_scor2);
+        lcd.print("-");
+        lcd.print(curent_scor1);
         lcd.print(" EchB");
         while(true);
       }
@@ -186,7 +190,18 @@ void displayQuarter()
       lcd.print("0");
     }
     lcd.print(secunde);
-    displayScor();
+    if(nr_sfert == 3)   //pentru a nu imi afisa in perioada dintre pauza mare si inceputul sfertului 3, scorul inversat
+    {
+      nr_sfert--;     //scad ca sa creada ca inca nu se modifica ordinea
+      displayScor();
+      nr_sfert++;     //revin inapoi ca sa nu imi distrug afisajul pe mai departe
+    }
+    else
+    {
+      displayScor();
+    }
+    //displayScor();
+   
     command = Serial.readStringUntil('\n');
     command.trim();
     
@@ -335,29 +350,40 @@ void displayScor()
   command.trim();
   //lcd.print(command);
   if(command.startsWith("1"))
-  {
-    curent_scor1 =atoi(command.substring(1).c_str());
-    if(anterior_scor1 != curent_scor1)
     {
-      ultim_scor_marcat =1;
+      curent_scor1 =atoi(command.substring(1).c_str());
+      if(anterior_scor1 != curent_scor1)
+      {
+        ultim_scor_marcat =1;
+      }
+      anterior_scor1=curent_scor1;
     }
-    anterior_scor1=curent_scor1;
-  }
   
-  if(command.startsWith("2"))
-  {
-    curent_scor2 =atoi(command.substring(1).c_str());
-    if(anterior_scor2 != curent_scor2)
+    if(command.startsWith("2"))
     {
-      ultim_scor_marcat =2;
-    }
-    anterior_scor2=curent_scor2;
-  }
-  lcd.setCursor(0, 1);
-  lcd.print("EchA ");
-  lcd.print(curent_scor1);
-  lcd.print("-");
-  lcd.print(curent_scor2);
-  lcd.print(" EchB");
-  
+      curent_scor2 =atoi(command.substring(1).c_str());
+      if(anterior_scor2 != curent_scor2)
+      {
+        ultim_scor_marcat =2;
+      }
+      anterior_scor2=curent_scor2;
+    }  
+ if(nr_sfert<3)
+  {
+    lcd.setCursor(0, 1);
+    lcd.print("EchA ");
+    lcd.print(curent_scor1);
+    lcd.print("-");
+    lcd.print(curent_scor2);
+    lcd.print(" EchB");
+ }
+ else
+ {
+    lcd.setCursor(0, 1);
+    lcd.print("EchA ");
+    lcd.print(curent_scor2);
+    lcd.print("-");
+    lcd.print(curent_scor1);
+    lcd.print(" EchB");
+ }  
 }

@@ -78,6 +78,17 @@ void loop()
           flag = true;
           Serial.println("Received b");
         }
+        String subsir = command.substring(1);
+        if(subsir.startsWith("H"))
+        {
+          Serial.print("ajuns");
+          int start = subsir.indexOf('*');
+          int stop = subsir.indexOf('-');
+          String val = subsir.substring(start+1, stop);
+          score = val.toInt();
+          Serial.print("nou ");
+          Serial.println(score);
+        }
       }
       if(command[0]=='4')
       {
