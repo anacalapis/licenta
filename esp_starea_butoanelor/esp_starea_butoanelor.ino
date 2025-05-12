@@ -21,42 +21,33 @@ void loop() {
   int microphone = digitalRead(MIC_PIN);
   int resume_button = digitalRead(RESUME_BUTTON);
   int delete_points = digitalRead(DELETE_POINTS);
-  // Serial.print("albastru ");
-  // Serial.println(resume_button);
-  // Serial.print("rosu ");
-  // Serial.println(delete_points);
-  // Trimite starea butonului la Raspberry Pi prin Bluetooth
-  // if (microphone == HIGH && flag==1) {
-  //   SerialBT.print(1);
-  //   flag=0;
-  // } 
-  // if (resume_button == LOW) {
-  //   SerialBT.print(0);
-  //   flag=1;
-  // } 
+
   if(microphone == HIGH)
   {
     SerialBT.print("1");
+    //Serial.print("1");
   }
   else 
   {
     if (resume_button == LOW) 
     {
       SerialBT.print("0");
+      //Serial.println("0");
     }
     else
     {
       if(delete_points == LOW)
       {
         SerialBT.print("4");
+        //Serial.print("4");
       }
-      else
-      {
-        SerialBT.print("2");
-      }
+      // else
+      // {
+      //   SerialBT.print("2");
+      // }
     }
       
   }
 
-  delay(50);
+  delay(10);
 }

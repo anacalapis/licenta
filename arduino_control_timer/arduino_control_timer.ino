@@ -1,10 +1,11 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define NR_SEC_SFERT 5   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_SFERT 6   //aici se pune cat dorim sa tina un sfert in secunde
 #define NR_SEC_PAUZA_MICA 3 //aici se pune cat dorim sa tina o pauza mica in secunde
 #define NR_SEC_PAUZA_MARE 3 //aici se pune cat dorim sa tina o pauza mare in secunde
-#define NR_SEC_OVERTIME 10
+#define NR_SEC_OVERTIME 5
+#define NR_SEC_ULTIMELE_2_MIN_MECI 5
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
@@ -17,6 +18,7 @@ int timeIntervalCount =0; //numara in ce interval ne aflam, par este sfert, impa
 int nr_sfert=1;
 int nr_overtime =0;
 bool overtime = false;
+bool ultimele_2_min = false;
 int countDownTime = NR_SEC_SFERT; //in secunde
 int timeQuarter =NR_SEC_SFERT ;
 int timeOvertime = NR_SEC_OVERTIME;
@@ -73,7 +75,18 @@ void loop() {
         Serial.print(curent_scor1);
         Serial.print("-");
         Serial.println(curent_scor2);
-        
+        // delay(100);
+        // if(ultim_scor_marcat ==1)
+        // {
+        //   ultim_scor_marcat=2;
+        // }
+        // else
+        // {
+        //   if(ultim_scor_marcat==2)
+        //   {
+        //     ultim_scor_marcat=1;
+        //   }
+        // }
         break;
       }
       case 7:   //situatia de overtime
@@ -81,7 +94,7 @@ void loop() {
         while(curent_scor1 == curent_scor2)
         {
           overtime = true;
-
+          ultimele_2_min = false;
           countDownTime = NR_SEC_PAUZA_MICA;
           displayPause();
 
@@ -152,7 +165,6 @@ void updateDisplay(int sfert)
 void displayQuarter()
 {
   //Serial.println("S");
-  //if(((countDownTime == NR_SEC_SFERT) && (overtime == false)) || ((countDownTime == NR_SEC_OVERTIME) && (overtime == true)))
   if(countDownTime == NR_SEC_SFERT || countDownTime == NR_SEC_OVERTIME)
   {
     int minutes, secunde;
@@ -251,6 +263,10 @@ void displayQuarter()
       {
         previousMillis = currentMillis; // Actualizează timpul anterior
         countDownTime--; // Scade timpul rămas
+        if((nr_sfert==4 || overtime==true) &&  countDownTime<NR_SEC_ULTIMELE_2_MIN_MECI)
+        {
+          ultimele_2_min=true;
+        }
         if(overtime)
         {
           updateDisplay(nr_overtime); 
@@ -354,6 +370,12 @@ void displayScor()
       curent_scor1 =atoi(command.substring(1).c_str());
       if(anterior_scor1 != curent_scor1)
       {
+        if(ultimele_2_min==true)
+        {
+          Serial.println("P");
+          isPaused = true; // Oprește timpul 
+          delay(100);
+        }
         ultim_scor_marcat =1;
       }
       anterior_scor1=curent_scor1;
@@ -364,6 +386,12 @@ void displayScor()
       curent_scor2 =atoi(command.substring(1).c_str());
       if(anterior_scor2 != curent_scor2)
       {
+        if(ultimele_2_min==true)
+        {
+          Serial.println("P");
+          isPaused = true; // Oprește timpul 
+          delay(100);
+        }
         ultim_scor_marcat =2;
       }
       anterior_scor2=curent_scor2;
