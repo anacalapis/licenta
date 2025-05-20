@@ -1,11 +1,11 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define NR_SEC_SFERT 6   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_SFERT 45   //aici se pune cat dorim sa tina un sfert in secunde
 #define NR_SEC_PAUZA_MICA 3 //aici se pune cat dorim sa tina o pauza mica in secunde
 #define NR_SEC_PAUZA_MARE 3 //aici se pune cat dorim sa tina o pauza mare in secunde
 #define NR_SEC_OVERTIME 5
-#define NR_SEC_ULTIMELE_2_MIN_MECI 5
+#define NR_SEC_ULTIMELE_2_MIN_MECI 10
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
@@ -25,6 +25,8 @@ int timeOvertime = NR_SEC_OVERTIME;
 int timeSmallBreak = NR_SEC_PAUZA_MICA;
 int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
+
+int buton_stergere =0;
 
 int scor1=0, scor2=0;
 int curent_scor1 =0, anterior_scor1=0;
@@ -216,23 +218,25 @@ void displayQuarter()
    
     command = Serial.readStringUntil('\n');
     command.trim();
-    
     while(!command.equals("00"))    // e inceput de sfert si se asteapta ca timpul sa porneasca
     {
       command = Serial.readStringUntil('\n');
       command.trim();
       if (command.equals("04")) 
       {
-        if(ultim_scor_marcat == 1)
+        if(ultim_scor_marcat == 1 && buton_stergere ==0)
         {
           Serial.println("A");
+          buton_stergere=1;
         }
-        else //if(ultim_scor_marcat == 2)
+        if(ultim_scor_marcat == 2 && buton_stergere==0)
         {
           Serial.println("B");
+          buton_stergere=1;
         }
         delay(100); 
         displayScor();
+        buton_stergere =0;
       }
     }
   }
@@ -254,6 +258,7 @@ void displayQuarter()
     {
       Serial.println("S");
       isPaused = false; // Reia timpul
+      buton_stergere = 0;
       delay(100); 
     }
     if (!isPaused)  //curge timpul in timpul sfertului
@@ -280,6 +285,7 @@ void displayQuarter()
     }
     else  //suntem in perioada aruncarilor libere
     {
+  
       if (command.equals("04")) 
       {
         //Serial.println("D");
@@ -287,7 +293,7 @@ void displayQuarter()
         {
           Serial.println("A");
         }
-        else
+        if(ultim_scor_marcat == 2)
         {
           Serial.println("B");
         }

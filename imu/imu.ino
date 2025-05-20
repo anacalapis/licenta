@@ -17,7 +17,7 @@ float maxim_anterior =0;
 
 void setup() {
   Serial.begin(9600); 
-  imuu.begin();
+  // imuu.begin();
   SerialBT.begin("ESP_IMU"); 
 
   Wire.setClock(400000);
@@ -56,7 +56,8 @@ void loop()
     if((int)maxim_anterior != (int)fct)
     {
       int masuratoare= (int)maxim_anterior;
-      SerialBT.print(masuratoare);
+      Serial.println(masuratoare);
+      SerialBT.println(masuratoare);
       maxim_anterior=0;
     }
     

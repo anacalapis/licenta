@@ -3,11 +3,11 @@
 #define SENSOR2_PIN 23 
 #define SENSOR3_PIN 18
 
-#define TREI_PUNCTE 50 
+#define TREI_PUNCTE 35
 BluetoothSerial SerialBT;
 
 String command = "";
-int distanta =0;
+float distanta =0;
 bool flag;
 int ultima_aruncare;
 
@@ -19,7 +19,6 @@ int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
 
-bool aruncare_libera;
 char comanda;
 
 void setup() {
@@ -82,20 +81,22 @@ void loop()
         String subsir = command.substring(1);
         if(subsir.startsWith("H"))
         {
-          Serial.print("ajuns");
-          //int start = subsir.indexOf('*');
           int start = subsir.indexOf('-');
           String val = subsir.substring(start+1);
           score = val.toInt();
-          Serial.print("nou ");
           Serial.println(score);
         }
       }
       if(command[0]=='4')
       {
         String d = String(command.c_str() +1);
-        distanta = d.toInt();
-        //Serial.println(distanta);
+        String dist;
+        int startIndex = d.indexOf('A')+1;
+        int stopIndex = d.indexOf('B');
+        dist = d.substring(startIndex, stopIndex);
+        distanta = dist.toFloat();
+        Serial.println(distanta);
+        //idx++;
 
       }
       
@@ -106,10 +107,6 @@ void loop()
       command += c;  // Adăugăm caracterul la comanda curentă
     }
   }
-  // if(comanda == 'P')
-  // {
-  //   SerialBT.printf("%d", score);
-  // }
   if((sensor1State == 0 || sensor3State==0) && flag)
   {
     previousMillis = millis();
@@ -128,7 +125,9 @@ void loop()
         }
         if(comanda == 'S')
         {
-          if(distanta <= TREI_PUNCTE)
+          Serial.print("luat");
+          Serial.println(distanta);
+          if(distanta < TREI_PUNCTE)
           {
             score = score+2;
             ultima_aruncare = 2;
@@ -138,12 +137,9 @@ void loop()
             score = score+3;
             ultima_aruncare = 3;
           }
-          //score=score+2;
           SerialBT.printf("%d", score);
           break;
         }
-        // score++;
-        //break;
       }
       currentMillis = millis();
     }
