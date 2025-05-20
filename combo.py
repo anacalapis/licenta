@@ -7,15 +7,22 @@ import time
 from datetime import datetime
 
 lock = threading.Lock()
-
 def write_distance_to_file(X, Y):
     with lock:
         with open("distanta.txt", "w") as file:
-            dist = math.sqrt((round(X, 2) - 50)**2 + (round(Y, 2))**2) #coord inel (50,0)
-            file.write(f'{round(dist,3)}')
-            dist = f"{dist}"
-            cv2.putText(rgbFrame, dist, (100, 100), cv2.FONT_HERSHEY_SIMPLEX, 
+            
+            distA = math.sqrt((X + 68.5)**2 + (Y +6)**2) #coord inelA (-68.5,-6)
+            distB = math.sqrt((X - 70)**2 + (Y -9.5)**2) #coord inelB (70, 9.5)
+          
+            file.write(f'A{round(distA,3)}B{round(distB,3)}')
+            distA = f"{round(distA,3)}"
+            distB = f"{round(distB,3)}"
+            
+            cv2.putText(clone, distA, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 
                                 0.7, (0, 255, 0), 2)
+            cv2.putText(clone, distB, (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 
+                                0.7, (0, 255, 0), 2)
+            
 
 # Global variables for ROI selection
 drawing = False
@@ -78,17 +85,14 @@ def draw_origin(img, origin_x, origin_y):
     cv2.putText(img, "Z", (int(origin_x + 15), int(origin_y + 25)), 
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
     
-    # Label the origin
-    cv2.putText(img, "(0,0,0)", (int(origin_x + 20), int(origin_y - 20)), 
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
 
 # Camera resolution
 width = 1280
 height = 720
 
 # Camera intrinsic parameters
-fx = 800  # focal length in pixels
-fy = 800
+fx = 1050  # focal length in pixels
+fy = 1050
 cx = width / 2  # principal point
 cy = height / 2
 
@@ -171,7 +175,7 @@ with dai.Device(pipeline) as device:
             kernel = np.ones((5, 5), np.uint8)
             mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
             mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-            cv2.imshow("mask", mask)
+            #cv2.imshow("mask", mask)
             
             # Find contours
             contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -222,10 +226,10 @@ with dai.Device(pipeline) as device:
                         
                         # Display 3D position in centimeters
                         text = f"Position: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"
-                        write_distance_to_file(abs(X), abs(Y))
+                        write_distance_to_file(X, Y)
                         cv2.putText(clone, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
                                     0.7, (0, 255, 0), 2)
-                        
+                    
                         # Draw a line from origin to object position
                         cv2.line(clone, (int(cx), int(cy)), (x, y), (255, 165, 0), 2)
         
