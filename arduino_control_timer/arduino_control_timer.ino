@@ -26,7 +26,7 @@ int timeSmallBreak = NR_SEC_PAUZA_MICA;
 int timeHalfBreak = NR_SEC_PAUZA_MARE; 
 String command;
 
-int buton_stergere =0;
+bool buton_stergere =false;
 
 int scor1=0, scor2=0;
 int curent_scor1 =0, anterior_scor1=0;
@@ -218,27 +218,26 @@ void displayQuarter()
    
     command = Serial.readStringUntil('\n');
     command.trim();
+    buton_stergere=false;
     while(!command.equals("00"))    // e inceput de sfert si se asteapta ca timpul sa porneasca
     {
       command = Serial.readStringUntil('\n');
       command.trim();
-      if (command.equals("04")) 
+      if (command.equals("04") && buton_stergere ==false) 
       {
-        if(ultim_scor_marcat == 1 && buton_stergere ==0)
+        if(ultim_scor_marcat == 1)
         {
           Serial.println("A");
-          buton_stergere=1;
         }
-        if(ultim_scor_marcat == 2 && buton_stergere==0)
+        if(ultim_scor_marcat == 2 )
         {
           Serial.println("B");
-          buton_stergere=1;
         }
         delay(100); 
         displayScor();
-        buton_stergere =0;
       }
     }
+    buton_stergere=true;
   }
   while(countDownTime !=0)  //suntem in timpul sfertului
   {
@@ -258,7 +257,7 @@ void displayQuarter()
     {
       Serial.println("S");
       isPaused = false; // Reia timpul
-      buton_stergere = 0;
+      buton_stergere = false;
       delay(100); 
     }
     if (!isPaused)  //curge timpul in timpul sfertului
@@ -337,12 +336,13 @@ void displayPause()
     displayScor();
 
   }
+  buton_stergere=false;
   while(countDownTime!=0)
   {
     unsigned long currentMillis = millis();
     command = Serial.readStringUntil('\n');
     command.trim();
-    if (command.equals("04")) 
+    if (command.equals("04") && buton_stergere ==false) 
     {
       //Serial.println("D");
       if(ultim_scor_marcat == 1)
@@ -356,6 +356,7 @@ void displayPause()
       //isPaused = false; // Reia timpul
       delay(100); 
       displayScor();
+      buton_stergere=true;
     }
       if (currentMillis - previousMillis >= interval && countDownTime > 0) 
       {

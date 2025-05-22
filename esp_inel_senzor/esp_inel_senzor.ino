@@ -19,6 +19,7 @@ int sensor1State= 1;
 int sensor2State= 1;
 int sensor3State= 1;
 
+int scor_delete=0;
 char comanda;
 
 void setup() {
@@ -144,9 +145,10 @@ void loop()
       currentMillis = millis();
     }
   }
- if(comanda =='A')
+ if(comanda =='A' && (score != scor_delete))
   {
     score = score - ultima_aruncare;
+    scor_delete = score;
     ultima_aruncare = 0;
   }
   SerialBT.printf("%d", score);

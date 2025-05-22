@@ -19,6 +19,8 @@ int stare_senzor1_inel= 1;      //memorează starea senzorului de pe inel
 int stare_senzor2_inel= 1;      //memorează starea senzorului de pe inel
 int stare_senzor3_inel= 1;      //memorează starea senzorului de pe inel
 
+int scor_stergere=0;
+
 char comandă_curentă;           //comanda curentă în funcție de care se iau deciziile pe parcursul programului
 
 void setup()                    //metodă ce se apelează o singură dată, la începutul programului, și este responsabilă pentru inițializarea variabilelor
@@ -146,9 +148,10 @@ void loop()                                     //metodă ce se execută, în bu
       timp_curent = millis();                                                   //se actualizează timpul curent, pentru a măsura cele 700 de ms
     }
   }
- if(comandă_curentă == 'B')                                                     //suntem în cazul în care arbitrul a decis anularea ultimului coș
+ if(comandă_curentă == 'B' && (scor != scor_stergere))                                                     //suntem în cazul în care arbitrul a decis anularea ultimului coș
   {
     scor = scor - ultima_aruncare;                                              //se actualizează noul scor
+    scor_stergere = scor;
     ultima_aruncare = 0;                                                        //ultima aruncare se face 0 pentru a nu permite ștergerea multiplă, din greșeală
  }
   
