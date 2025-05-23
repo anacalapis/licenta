@@ -1,7 +1,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define NR_SEC_SFERT 45   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_SFERT 15   //aici se pune cat dorim sa tina un sfert in secunde
 #define NR_SEC_PAUZA_MICA 3 //aici se pune cat dorim sa tina o pauza mica in secunde
 #define NR_SEC_PAUZA_MARE 3 //aici se pune cat dorim sa tina o pauza mare in secunde
 #define NR_SEC_OVERTIME 5
@@ -32,6 +32,8 @@ int scor1=0, scor2=0;
 int curent_scor1 =0, anterior_scor1=0;
 int curent_scor2 =0, anterior_scor2=0;
 
+int scor_ec1=0, scor_ec2=0;
+bool se_poate=false;
 int ultim_scor_marcat; //daca este 1, semnifica ca ultimul cos a fost marcat de echipa A
                         //daca este 2, semnifica ca ultimul cos a fost marcat de echipa B
 void setup() 
@@ -77,18 +79,6 @@ void loop() {
         Serial.print(curent_scor1);
         Serial.print("-");
         Serial.println(curent_scor2);
-        // delay(100);
-        // if(ultim_scor_marcat ==1)
-        // {
-        //   ultim_scor_marcat=2;
-        // }
-        // else
-        // {
-        //   if(ultim_scor_marcat==2)
-        //   {
-        //     ultim_scor_marcat=1;
-        //   }
-        // }
         break;
       }
       case 7:   //situatia de overtime
@@ -228,20 +218,23 @@ void displayQuarter()
         if(ultim_scor_marcat == 1)
         {
           Serial.println("A");
+          //ultim_scor_marcat = 1;
         }
         if(ultim_scor_marcat == 2 )
         {
           Serial.println("B");
+          //ultim_scor_marcat =2;
         }
         delay(100); 
         displayScor();
+        buton_stergere=true;
       }
+      displayScor();
     }
     buton_stergere=true;
   }
   while(countDownTime !=0)  //suntem in timpul sfertului
   {
-
     command = Serial.readStringUntil('\n');
     command.trim();
     //if (digitalRead(pauseButton) == LOW)
@@ -284,17 +277,18 @@ void displayQuarter()
     }
     else  //suntem in perioada aruncarilor libere
     {
-  
       if (command.equals("04")) 
       {
         //Serial.println("D");
         if(ultim_scor_marcat == 1)
         {
           Serial.println("A");
+          ultim_scor_marcat = 1;
         }
         if(ultim_scor_marcat == 2)
         {
           Serial.println("B");
+          ultim_scor_marcat =2;
         }
         delay(100); 
         displayScor();
@@ -302,9 +296,33 @@ void displayQuarter()
         {
           Serial.println("a");
         }
-        else  //if(ultim_scor_marcat == 2)
+        else  //if(ultim_scor_marcat == 2) 
         {
           Serial.println("b");
+        }
+        //cat timp nu se mai inscrie nimic, de nicio echipa, se sta aici
+        int scor_aici1= curent_scor1;
+        int scor_aici2=curent_scor2;
+        while (scor_aici1== curent_scor1 && scor_aici2==curent_scor2)
+        {
+          command = Serial.readStringUntil('\n');
+          command.trim();
+          if (command.equals("00")) 
+          {
+            Serial.println("S");
+            isPaused = false; // Reia timpul
+            buton_stergere = false;
+            delay(100); 
+            break;
+          }
+          if(command.startsWith("1"))
+          {
+            curent_scor1 =atoi(command.substring(1).c_str());
+          }
+          if(command.startsWith("2"))
+          {
+            curent_scor2 =atoi(command.substring(1).c_str());
+          }
         }
       }
     }
@@ -332,7 +350,6 @@ void displayPause()
       lcd.print("0");
     }
     lcd.print(secunde);
-    
     displayScor();
 
   }
@@ -348,22 +365,24 @@ void displayPause()
       if(ultim_scor_marcat == 1)
         {
           Serial.println("A");
+          ultim_scor_marcat =1;
         }
       else //(ultim_scor_marcat == 2)
         {
           Serial.println("B");
+          ultim_scor_marcat =2;
         }
       //isPaused = false; // Reia timpul
       delay(100); 
       displayScor();
       buton_stergere=true;
     }
-      if (currentMillis - previousMillis >= interval && countDownTime > 0) 
-      {
-        previousMillis = currentMillis; // Actualizează timpul anterior
-        countDownTime--; // Scade timpul rămas
-        updateDisplay(0);
-      }
+    if (currentMillis - previousMillis >= interval && countDownTime > 0) 
+    {
+      previousMillis = currentMillis; // Actualizează timpul anterior
+      countDownTime--; // Scade timpul rămas
+      updateDisplay(0);
+    }
   }
 }
 
@@ -371,7 +390,6 @@ void displayScor()
 {
   command = Serial.readStringUntil('\n');
   command.trim();
-  //lcd.print(command);
   if(command.startsWith("1"))
     {
       curent_scor1 =atoi(command.substring(1).c_str());
@@ -387,7 +405,6 @@ void displayScor()
       }
       anterior_scor1=curent_scor1;
     }
-  
     if(command.startsWith("2"))
     {
       curent_scor2 =atoi(command.substring(1).c_str());
@@ -403,22 +420,43 @@ void displayScor()
       }
       anterior_scor2=curent_scor2;
     }  
- if(nr_sfert<3)
+  lcd.setCursor(0, 1);
+  lcd.print("EchA ");
+  if(nr_sfert<3)
   {
-    lcd.setCursor(0, 1);
-    lcd.print("EchA ");
+    if(curent_scor1<10)
+    {
+      lcd.print(" ");
+    }
     lcd.print(curent_scor1);
     lcd.print("-");
     lcd.print(curent_scor2);
-    lcd.print(" EchB");
- }
+    if(curent_scor2<10)
+    {
+      lcd.print("  ");
+    }
+    else
+    {
+      lcd.print(" ");
+    }  
+  }
  else
  {
-    lcd.setCursor(0, 1);
-    lcd.print("EchA ");
+    if(curent_scor2<10)
+    {
+      lcd.print(" ");
+    }
     lcd.print(curent_scor2);
     lcd.print("-");
     lcd.print(curent_scor1);
-    lcd.print(" EchB");
- }  
+    if(curent_scor1<10)
+    {
+      lcd.print("  ");
+    }
+    else
+    {
+      lcd.print(" ");
+    }
+ }
+  lcd.print(" EchB");
 }

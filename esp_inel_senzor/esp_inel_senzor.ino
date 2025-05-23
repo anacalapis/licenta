@@ -21,7 +21,6 @@ int sensor3State= 1;
 
 int scor_delete=0;
 char comanda;
-
 void setup() {
   pinMode(SENSOR1_PIN, INPUT_PULLUP); 
   pinMode(SENSOR2_PIN, INPUT_PULLUP); 
@@ -85,6 +84,7 @@ void loop()
           int start = subsir.indexOf('-');
           String val = subsir.substring(start+1);
           score = val.toInt();
+          //pauza_mare=true;
           Serial.println(score);
         }
       }
@@ -92,13 +92,11 @@ void loop()
       {
         String d = String(command.c_str() +1);
         String dist;
-        int startIndex = d.indexOf('A')+1;
-        int stopIndex = d.indexOf('B');
-        dist = d.substring(startIndex, stopIndex);
+        int indexA = d.indexOf('A');
+        int indexB = d.indexOf('B');
+        dist = d.substring(indexA+1, indexB);
         distanta = dist.toFloat();
         Serial.println(distanta);
-        //idx++;
-
       }
       
       command = "";  // Resetăm comanda pentru următoarea citire

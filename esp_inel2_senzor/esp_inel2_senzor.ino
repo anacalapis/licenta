@@ -20,7 +20,6 @@ int stare_senzor2_inel= 1;      //memorează starea senzorului de pe inel
 int stare_senzor3_inel= 1;      //memorează starea senzorului de pe inel
 
 int scor_stergere=0;
-
 char comandă_curentă;           //comanda curentă în funcție de care se iau deciziile pe parcursul programului
 
 void setup()                    //metodă ce se apelează o singură dată, la începutul programului, și este responsabilă pentru inițializarea variabilelor
@@ -96,9 +95,10 @@ void loop()                                     //metodă ce se execută, în bu
       if(comandă[0]=='4')                           //dacă mesajul începe cu 4, înseamnă ca vine de la cameră și ne transmite distanța de la minge la cele 2 inele
       {
         String d = String(comandă.c_str() +1);      //eliminăm cifra 4 din mesaj, mesajul este de forma 4A distanta inel 1B distanta inel2
-        Serial.println(d);          
-        int startIndex = d.indexOf('B');            //fiind considerat inelul 2, ne interesează distanța ce se află după litera B
-        String dist = d.substring(startIndex+1);    //se extrage distanța, care se află de la B până la finalul mesajului
+        Serial.println(d);
+        String dist;            
+        int indexB = d.indexOf('B');            //fiind considerat inelul 2, ne interesează distanța ce se află după litera B
+        dist = d.substring(indexB+1);    //se extrage distanța, care se află de la B până la finalul mesajului
         distanță_minge_inel = dist.toFloat();       //se convertește în număr real
         Serial.println(distanță_minge_inel);
       }

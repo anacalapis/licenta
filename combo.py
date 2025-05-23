@@ -3,54 +3,54 @@ import cv2
 import numpy as np
 import math
 import threading 
-import time
-from datetime import datetime
 
-lock = threading.Lock()
-def write_distance_to_file(X, Y):
-    with lock:
-        with open("distanta.txt", "w") as file:
-            
-            distA = math.sqrt((X + 68.5)**2 + (Y +6)**2) #coord inelA (-68.5,-6)
-            distB = math.sqrt((X - 70)**2 + (Y -9.5)**2) #coord inelB (70, 9.5)
-          
-            file.write(f'A{round(distA,3)}B{round(distB,3)}')
-            distA = f"{round(distA,3)}"
-            distB = f"{round(distB,3)}"
-            
-            cv2.putText(clone, distA, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 
-                                0.7, (0, 255, 0), 2)
-            cv2.putText(clone, distB, (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 
-                                0.7, (0, 255, 0), 2)
-            
-
-# Global variables for ROI selection
+#variabilele de mai jos sunt explicate în funcția de mai jos, acolo unde sunt și folosite
 conturare_obiect = False
 coord_init_click_X, coord_init_click_Y = -1, -1
-rx, ry, rw, rh = 0, 0, 0, 0
+colț_stânga_sus_X, colț_stânga_sus_Y, lung_chenar, lățime_chenar = 0, 0, 0, 0
 obiect_selectat = False
 limita_inferioara_culoare = None
 limita_superioară_culoare = None
 
-def draw_rectangle(event, x, y, flags, param):          #funcție specifică OpenCV care monitorizează evenimentele mouse-ului
-    #x, y reprezintă coordonatele curente ale mouse-ului
-    global coord_init_click_X, coord_init_click_Y                       #coordonatele inițiale în momentul în care se apasă pe mouse pt a începe selecția
-    global conturare_obiect                      #este de tip boolean și indică dacă se desenează conturul, în acel moment
-    global obiect_selectat                 #devine adevărată atunci când s-a selectat o bucată din imagine
-    global rx, ry                       #coordonatele colțului din stânga sus
-    global rw, rh                       #lățimea și lungimea dreptunghiului
-    global limita_inferioara_culoare, limita_superioară_culoare       #limita inferioară și superioară al intervalului de valori a culorii selectate în HSV
-    if event == cv2.EVENT_LBUTTONDOWN:  #când este apăsat butonul stâng al mouse-ului, înseamnă că începe selectarea obiectului
-        conturare_obiect = True                  #se pune variabila pe adevărat
+lock = threading.Lock()                                 #crează un obiect de tip ”lock” care este folosit pentru a limita accesul la o resursa ce poate fi accesată de mai multe fire de execuție   
+            
+def scrie_distanță_în_fișier(X, Y):                     #funcție care este responsabilă de scrierea într-un fișier al unui mesaj 
+                                                        #de forma A„distanța_până_la_inelul1”B„distanța_până_la_inelul2”
+    with lock:                                          #pentru a nu permite altui fir de execuție să efectueze operații asupra fișierului
+        with open("distanta.txt", "w") as file:         #fișierul este deschis pentru scriere și se va face referire la acesta prin variabila ”file”
+            
+            #se calculează distanța față de ambele panouri
+            #coordonatele inelelor au fost obținute tot cu ajutorul camerei, pentru o precizie mai exactă
+            #datorită faptului că originea camerei față de care se calculează nu este chiar la centru terenului din vina suportului
+            distanță_inel_A = math.sqrt((X + 68.5)**2 + (Y +6)**2)                                          #coordonata inelului A (-68.5,-6)
+            distanță_inel_B = math.sqrt((X - 70)**2 + (Y -9.5)**2)                                          #coordonata inelului B (70, 9.5)
+          
+            file.write(f'A{round(distanță_inel_A,3)}B{round(distanță_inel_B,3)}')                           #scriere în fișier după șablonul dorit
+            distanță_inel_A = f"{round(distanță_inel_A,3)}"                                                 #am transformat distanțele în șiruri de caractere pentru a putea fi printate pe ecran
+            distanță_inel_B = f"{round(distanță_inel_B,3)}"                         
+            
+            cv2.putText(clonă, distanță_inel_A, (10, 100), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)   #pentru a știi distanțele ce sunt scrise în fișier
+            cv2.putText(clonă, distanță_inel_B, (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)   #le-am printat și pe ecran
+
+def desenare_chenar_culoare(event, x, y, flags, param):                          #funcție specifică OpenCV care monitorizează evenimentele mouse-ului
+                                                                                 #x, y reprezintă coordonatele curente ale mouse-ului
+    global coord_init_click_X, coord_init_click_Y                                #coordonatele inițiale în momentul în care se apasă pe mouse pt a începe selecția
+    global conturare_obiect                                                      #este de tip boolean și indică dacă se desenează conturul, în acel moment
+    global obiect_selectat                                                       #devine adevărată atunci când s-a selectat o bucată din imagine
+    global colț_stânga_sus_X, colț_stânga_sus_Y                                  #coordonatele colțului din stânga sus
+    global lung_chenar, lățime_chenar                                            #lățimea și lungimea dreptunghiului
+    global limita_inferioara_culoare, limita_superioară_culoare                  #limita inferioară și superioară al intervalului de valori a culorii selectate în HSV
+    if event == cv2.EVENT_LBUTTONDOWN:                                           #când este apăsat butonul stâng al mouse-ului, înseamnă că începe selectarea obiectului
+        conturare_obiect = True                                                  #se pune variabila pe adevărat
         coord_init_click_X, coord_init_click_Y = x, y                            #se salvează coordonatele unde s-a dat click prima dată pe imagine pentru a începe selecția
     elif event == cv2.EVENT_MOUSEMOVE:                                           #dacă mouse-ul se mișcă și s-a început selecția
         if conturare_obiect:                                                     #indică începutul selecții
-            rx, ry = min(coord_init_click_X, x), min(coord_init_click_Y, y)      #se actualizează în permanență coordonatele colțului din stânga-sus
-            rw, rh = abs(coord_init_click_X - x), abs(coord_init_click_Y - y)    #se actualizează în permanență lungimea și lățimea dreptunghiului ce urmează să se formeze
+            colț_stânga_sus_X, colț_stânga_sus_Y = min(coord_init_click_X, x), min(coord_init_click_Y, y)      #se actualizează în permanență coordonatele colțului din stânga-sus
+            lung_chenar, lățime_chenar = abs(coord_init_click_X - x), abs(coord_init_click_Y - y)    #se actualizează în permanență lungimea și lățimea dreptunghiului ce urmează să se formeze
     elif event == cv2.EVENT_LBUTTONUP:                                           #dacă nu se mai ține butonul stâng apăsat, înseamnă că selecția obiectului s-a terminat
         conturare_obiect = False                                                 #indică terminarea efectuării conturului
         obiect_selectat = True                                                   #indică existența unei zone deja selectate (regiune de interes)
-        roi = hsvFrame[ry:ry+rh, rx:rx+rw]                                       #se extrage zona selectată, în format HSV  
+        roi = cadru_HSV[colț_stânga_sus_Y:colț_stânga_sus_Y+lățime_chenar, colț_stânga_sus_X:colț_stânga_sus_X+lung_chenar]      #se extrage zona selectată, în format HSV  
         h, s, v = cv2.split(roi)                                                 #separă cele 3 canale (HSV) ale imaginii color într-o listă
 
         limita_inferioara_culoare = np.array([                                   #np.mean(h)- calculează media valorii acelei liste și astfel se obține o valoare medie, 
@@ -68,11 +68,8 @@ def draw_rectangle(event, x, y, flags, param):          #funcție specifică Ope
         
         print(f"Intervalul de culoare [ {limita_inferioara_culoare} , {limita_superioară_culoare}]")    #se afișează, în terminal, intervalul obținut
 
-def draw_origin(imagine_curentă, centru_img_X, centru_img_Y):
-   
-    #pe imaginea curentă, în punctul de coordonate (centru_img_X , centru_img_Y), se desenează cu alb, un X, de dimensiunea 20 și grosimea de 2 pixeli
-    cv2.drawMarker(imagine_curentă, (centru_img_X, centru_img_Y), (255, 255, 255), cv2.MARKER_CROSS, 20, 2)
-    
+def desenare_axe(imagine_curentă, centru_img_X, centru_img_Y):
+       
     #pe imaginea curentă, desenează o line roșie și groasă de 2 pixeli, de la punctul (centru_img_X , centru_img_Y) la (centru_img_X+50 , centru_img_Y) pentru a ilustra care este axa X pe imagine
     cv2.line(imagine_curentă, (int(centru_img_X), int(centru_img_Y)), (int(centru_img_X + 50), int(centru_img_Y)), (0, 0, 255), 2)
     
@@ -93,13 +90,13 @@ def draw_origin(imagine_curentă, centru_img_X, centru_img_Y):
     cv2.putText(imagine_curentă, "Z", (int(centru_img_X + 15), int(centru_img_Y + 25)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
 
 #rezoluția camerei    
-lungime_img = 1280      #lungimea imagini în funcție de numărul de pixeli
-lățime_img = 720        #lățimea imagini în funcție de numărul de pixeli
+lungime_img = 1280                                                                  #lungimea imagini în funcție de numărul de pixeli
+lățime_img = 720                                                                    #lățimea imagini în funcție de numărul de pixeli
 
-fx = 1050  ################################################################################################### focal length in pixels
+fx = 1050                                                                           #distanța focală în pixeli
 fy = 1050
-centru_img_X = lungime_img / 2                                  #coordonata X a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
-centru_img_Y = lățime_img / 2                                   #coordonata Y a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
+centru_img_X = lungime_img / 2                                                      #coordonata X a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
+centru_img_Y = lățime_img / 2                                                       #coordonata Y a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
 
 
 pipeline = dai.Pipeline()                                       #creează un flux de procesare a imaginilor venite de la cameră
@@ -115,137 +112,112 @@ cameră_stereo.setLeftRightCheck(True)                                          
 cameră_stereo.setExtendedDisparity(False)                                          #este setat pentru detecția cu o precizie mai bună a obiectelor mai departe de 75 cm față de cameră
 cameră_stereo.setSubpixel(True)                                                    #folosit pentru îmbunătățirea preciziei
 
-# Configure mono cameras
 cameră_mono_stânga = pipeline.createMonoCamera()                                        #se adaugă camera mono din partea stângă
 cameră_mono_dreapta = pipeline.createMonoCamera()                                       #se adaugă camera mono din partea dreapta
 cameră_mono_stânga.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)   #setează rezoluția camerei din partea stângă, are o precizie medie și o viteză de procesare mare
-cameră_mono_dreapta.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)  #setează rezoluția camerei din partea dreaptă
+cameră_mono_dreapta.setResolution(dai.MonoCameraProperties.SensorResolution.THE_400_P)  #setează rezoluția camerei din partea dreaptă la 640x400
 cameră_mono_stânga.setBoardSocket(dai.CameraBoardSocket.CAM_B)                          #se leagă la portul fizic al camerei, CAM_B = camera mono din stânga
 cameră_mono_dreapta.setBoardSocket(dai.CameraBoardSocket.CAM_C)                         #se leagă la portul fizic al camerei, CAM_C = camera mono din dreapta
 
 cameră_mono_stânga.out.link(cameră_stereo.left)                                         #se conectează ieșirea camerei mono din stânga la intrarea stângă a camerei stereo
 cameră_mono_dreapta.out.link(cameră_stereo.right)                                       #se conectează ieșirea camerei mono din dreapta la intrarea dreaptă a camerei stereo
 
-# Create outputs
-xoutRgb = pipeline.createXLinkOut()
-xoutRgb.setStreamName("rgb")
-cameră_RGB.preview.link(xoutRgb.input)
+out_RGB = pipeline.createXLinkOut()                                                     #creează un nod ce va transmite datele prin USB către Raspberry și va fi folosit pentru imaginea RGB
+out_RGB.setStreamName("RGB")                                                            #se setează numele fluxului de date ce se ocupă de transmiterea imaginii RGB                                 
+cameră_RGB.preview.link(out_RGB.input)                                                  #se leagă la intrarea fluxului de date, camera RGB, definită anterior
 
-xoutDepth = pipeline.createXLinkOut()
-xoutDepth.setStreamName("depth")
-cameră_stereo.depth.link(xoutDepth.input)
+out_adâncime = pipeline.createXLinkOut()                                                #se creează un alt nod ce va fi folosit pentru adâncime
+out_adâncime.setStreamName("adâncime")                                                  #se seteaza numele fluxului de date ce va fi responsabil de adâncime
+cameră_stereo.depth.link(out_adâncime.input)                                            #se leagă la intrarea fluxului de date, camera stereo (folosită pt adâncime), definită anterior
 
-# Start the device
-with dai.Device(pipeline) as device:
-    # Get output queues
-    qRgb = device.getOutputQueue(name="rgb", maxSize=4, blocking=False)
-    qDepth = device.getOutputQueue(name="depth", maxSize=4, blocking=False)
-    
-    # Create window and set mouse callback
-    cv2.namedWindow("Object Selection")
-    cv2.setMouseCallback("Object Selection", draw_rectangle)
-    
-    # Processing loop
+with dai.Device(pipeline) as device:                                                    #creează conexiunea între program și camera OAK-D Lite printr-un pipeline
+                                                                                        #se pornește camera
+    coadă_RGB = device.getOutputQueue(name="RGB", maxSize=4, blocking=False)            #creează o coadă, de 4 cadre, în care se stochează cadrele RGB
+    coadă_adâncime = device.getOutputQueue(name="adâncime", maxSize=4, blocking=False)  #creează o coadă, de 4 cadre, în care se stochează harta de adâncime
+    #parametrul blocking este setat pe False pentru ca în cazul în care nu există cadru disponibil în coada de așteptare, programul să nu se blocheze, ci să returneze un None ce poate fi gestionat
+
+    cv2.namedWindow("Imagine cameră")                                                   #se dă nume ferestrei ce urmează să fie afișată pe ecran
+    cv2.setMouseCallback("Imagine cameră", desenare_chenar_culoare)                     #leagă funcția ce se ocupă de mișcările mouse-ului, la fereastra dată
+
     while True:
-        # Get frames
-        inRgb = qRgb.get()
-        inDepth = qDepth.get()
+        cadru_RGB = coadă_RGB.get()                                                     #se ia un cadru din coada de așteptare pentru cadrele ce oferă imagini RGB
+        cadru_adâncime = coadă_adâncime.get()                                           #se ia un cadru din coada de așteptare a hărții de adâncime
         
-        # Convert to OpenCV format
-        rgbFrame = inRgb.getCvFrame()
-        depthFrame = inDepth.getFrame()
+        cadru_BGR = cadru_RGB.getCvFrame()                                              #se obține un cadru compatibil cu OpenCV, imaginea RGB este transformată în BGR
+        matrice_adâncime = cadru_adâncime.getFrame()                                    #se extrage doar imaginea de adâncime, sub formă de matrice 2D
+
+        cadru_HSV = cv2.cvtColor(cadru_BGR, cv2.COLOR_BGR2HSV)                          #transformă din format BGR în format HSV, folosit pentru detecția culorii
+     
+        desenare_axe(cadru_BGR, centru_img_X, centru_img_Y)                             #se apelează funcția care desenează axele de coordonate peste iamgine
+  
+        clonă = cadru_BGR.copy()                                                        #se face o copie a imaginii originale, pentru a lucra pe o copie, nu pe original
         
-        # Convert to HSV for color tracking
-        hsvFrame = cv2.cvtColor(rgbFrame, cv2.COLOR_BGR2HSV)
+        if not obiect_selectat and conturare_obiect:                                    #dacă nu avem un obiect selectat, dar suntem în procesul de selectare
+            cv2.rectangle(clonă, (colț_stânga_sus_X, colț_stânga_sus_Y), (colț_stânga_sus_X + lung_chenar, colț_stânga_sus_Y + lățime_chenar), (0, 255, 0), 2)
+            #se desenează, pe imaginea clonă, chenarul de culoare verde, de grosime 2, ce este desenat în timp real de utilizator, pentru a ce zonă selectează
         
-        # Draw the coordinate system origin
-        draw_origin(rgbFrame, centru_img_X, centru_img_Y)
+        if limita_inferioara_culoare is not None and limita_superioară_culoare is not None:         #dacă există selectată o zonă din imagine, 
+                                                                                                    #se formează automat intervalul de culoare în care se caută
+            img_alb_negru = cv2.inRange(cadru_HSV, limita_inferioara_culoare, limita_superioară_culoare)     #se creează o imagine alb-negru, unde pixeli ce se află în acel interval
+                                                                                                    #devin albi, iar ceilalți devin negri
+            matrice = np.ones((5, 5), np.uint8)                                                     #definirea matricei folosită la operații de curățare a imaginii
+            img_alb_negru = cv2.morphologyEx(img_alb_negru, cv2.MORPH_OPEN, matrice)                #elimină petele albe mici și izolate
+            img_alb_negru = cv2.morphologyEx(img_alb_negru, cv2.MORPH_CLOSE, matrice)               #face obiectele detectate mai clare prin astuparea micilor pete negre de pe suprafețele albe            
         
-        # Clone frame for conturare_obiect
-        clone = rgbFrame.copy()
+            contururi, _ = cv2.findContours(img_alb_negru, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) #detectează contururile albe din imagine
         
-        # Draw ROI selection rectangle if in progress
-        if not obiect_selectat and conturare_obiect:
-            cv2.rectangle(clone, (rx, ry), (rx + rw, ry + rh), (0, 255, 0), 2)
-        
-        # If color range is set, do object tracking
-        if limita_inferioara_culoare is not None and limita_superioară_culoare is not None:
-            # Create color mask
-            mask = cv2.inRange(hsvFrame, limita_inferioara_culoare, limita_superioară_culoare)
-            
-            # Clean up mask
-            kernel = np.ones((5, 5), np.uint8)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
-            #cv2.imshow("mask", mask)
-            
-            # Find contours
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-            
-            # Process contours to find the object
-            if contours:
-                # Find the largest contour (should be the object)
-                c = max(contours, key=cv2.contourArea)
+            if contururi:                                                               #daca există lista de contururi
+                contur = max(contururi, key=cv2.contourArea)                            #alege cel mai mare contur din imagine, unde cv2.contourArea calculează suprafața obiectului detectat
+
+                if cv2.contourArea(contur) > 100:                                       #dacă conturul este suficient de mare, eu l-am luat 100 de pixeli
+                    ((x, y), rază) = cv2.minEnclosingCircle(contur)                     #caută cel mai mic contur care înconjoară obiectul
+                    x, y, rază = int(x), int(y), int(rază)                              #pe baza conturului găsit, se extrage centrul cercului și raza acestuia
+                    
+                    cv2.circle(clonă, (x, y), rază, (0, 255, 0), 2)                     #se desenează conturul cercului găsit, cu culoarea verde și o grosime de 2 pixeli
+                    cv2.circle(clonă, (x, y), 2, (0, 0, 255), -1)                       #se pune un punct în centrul cercului
+                                                                
+                    #pentru că imaginea RGB și imaginea cu valorile de adâncime au rezoluții diferite, se face următorul calcul 
+                    #pentru a cunoaște corespondentul coordonatelor centrului cercului din imaginea BGR, în imaginea de adâncime (pentru a afla adâncimea acestui punct)
+                    pct_adâncime_X = int(x * matrice_adâncime.shape[1] / cadru_BGR.shape[1])    #coordonata X a punctului corespondent în imaginea de adâncime; .shape[1]- lățimea imaginii
+                    pct_adâncime_Y = int(y * matrice_adâncime.shape[0] / cadru_BGR.shape[0])    #coordonata Y a punctului corespondent în imaginea de adâncime; .shape[0]- lungimea imaginii
+                    
+                    pct_adâncime_X = max(0, min(pct_adâncime_X, matrice_adâncime.shape[1] - 1)) #verificăm noile coordonate pentru a nu ieși din imaginea de adâncime
+                    pct_adâncime_Y = max(0, min(pct_adâncime_Y, matrice_adâncime.shape[0] - 1))
                 
-                # Only proceed if contour is large enough
-                if cv2.contourArea(c) > 100:
-                    # Get the bounding circle
-                    ((x, y), radius) = cv2.minEnclosingCircle(c)
-                    x, y, radius = int(x), int(y), int(radius)
+                    zonă = 5                                                            #lungimea pătratului care este folosit pentru a analiza adâncimea
+                                                                                        #nu ne uitâm doar în centrul cercului, ci pe o zonă de 5x5 pixeli, pentru a oferi o stabiliate mai mare
+                    #se definesc colțurile pătratului ce se formează în jurul centrului cercului
+                    xMin = max(0, pct_adâncime_X - zonă)                                #ne asigurăm că nu mergem prea în stânga
+                    xMax = min(matrice_adâncime.shape[1] - 1, pct_adâncime_X + zonă)    #ne asigurăm că nu mergem prea în dreapta
+                    yMin = max(0, pct_adâncime_Y - zonă)                                #ne asigurăm că nu mergem prea sus
+                    yMax = min(matrice_adâncime.shape[0] - 1, pct_adâncime_Y + zonă)    #ne asigurăm că nu mergem prea jos
                     
-                    # Draw circle around the object
-                    cv2.circle(clone, (x, y), radius, (0, 255, 0), 2)
-                    cv2.circle(clone, (x, y), 2, (0, 0, 255), -1)
+                    regiune_adâncime = matrice_adâncime[yMin:yMax, xMin:xMax]           #se extrage zona de adâncime a pătratului definit mai sus
                     
-                    # Calculate corresponding point in depth map
-                    depthX = int(x * depthFrame.shape[1] / rgbFrame.shape[1])
-                    depthY = int(y * depthFrame.shape[0] / rgbFrame.shape[0])
+                    regiune_adâncime_corect = regiune_adâncime[regiune_adâncime > 0]    #păstrează distanțele corecte, cele care au 0 înseamnă că nu au nicio dată
                     
-                    # Ensure coordinates are within bounds
-                    depthX = max(0, min(depthX, depthFrame.shape[1] - 1))
-                    depthY = max(0, min(depthY, depthFrame.shape[0] - 1))
-                    
-                    # Check depth around the point (5x5 region)
-                    region_size = 5
-                    xMin = max(0, depthX - region_size)
-                    xMax = min(depthFrame.shape[1] - 1, depthX + region_size)
-                    yMin = max(0, depthY - region_size)
-                    yMax = min(depthFrame.shape[0] - 1, depthY + region_size)
-                    
-                    depthRegion = depthFrame[yMin:yMax, xMin:xMax]
-                    
-                    # Get non-zero depth values
-                    nonZeroDepths = depthRegion[depthRegion > 0]
-                    
-                    if len(nonZeroDepths) > 0:
-                        # Get median depth (more robust to outliers)
-                        depth = np.median(nonZeroDepths)
+                    if len(regiune_adâncime_corect) > 0:                                #dacă există astfel de date
+                        adâncime_out = np.median(regiune_adâncime_corect)               #calculează mediana din acea regiune și NU media valorilor
+                                                                                        #mediana = valoarea din mijloc care oferă o estimare mai sigură
                         
-                        # Calculate 3D coordinates (in centimeters)
-                        Z = depth / 10.0  # Convert to centimeters
-                        X = (x - centru_img_X) * Z / fx
+                        Z = adâncime_out / 10.0                                         #convertește valorea distanței în centimetri
+                        X = (x - centru_img_X) * Z / fx                                 #diferența față de centru este înmulțit cu adâncimea obținută și apoi împărțit la focal length
                         Y = (y - centru_img_Y) * Z / fy
                         
-                        # Display 3D position in centimeters
-                        text = f"Position: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"
-                        write_distance_to_file(X, Y)
-                        cv2.putText(clone, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 
-                                    0.7, (0, 255, 0), 2)
-                    
-                        # Draw a line from origin to object position
-                        cv2.line(clone, (int(centru_img_X), int(centru_img_Y)), (x, y), (255, 165, 0), 2)
+                        scrie_distanță_în_fișier(X, Y)                                                      #coordonatele punctului sunt transmise ca și parametru pt a se calcula distanța până la inele
+
+                        text = f"Coordonatele centrului mingii: X={X:.1f}cm, Y={Y:.1f}cm, Z={Z:.1f}cm"      #se formează un string ce urmează sa fie scrie pe imagine
+                        cv2.putText(clonă, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)   #este scris pe imagine
         
-        # Show the frame
-        cv2.imshow("Object Selection", clone)
+        cv2.imshow("Imagine cameră", clonă)                       #afișarea imaginii după toate operațiile și calculele făcute
         
-        # Exit on 'q' or ESC key
-        key = cv2.waitKey(1)
-        if key == 27 or key == ord('q'):  # ESC or 'q'
+        tasta = cv2.waitKey(1)                                    #se așteapta ca o tastă să fie apăsată
+        if tasta == ord('q'):                                     #dacă se apasă q, atunci programul se va încheia
             break
-        elif key == ord('r'):  # 'r' to reset ROI selection
+        elif tasta == ord('r'):                                   #dacă se apasă r, se face o reselectare a obiectului pentru a extrage culoarea pe care dorim să o urmărim
             obiect_selectat = False
             limita_inferioara_culoare = None
             limita_superioară_culoare = None
-            print("Reset ROI selection. Select new object.")
+            print("Reselectarea obiectului.")
 
 cv2.destroyAllWindows()
