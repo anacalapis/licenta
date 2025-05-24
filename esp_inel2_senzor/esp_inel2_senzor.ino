@@ -124,7 +124,8 @@ void loop()                                     //metodă ce se execută, în bu
         {
           scor++;                                                               //actualizarea scorului, se incrementează doar cu un punct
           ultima_aruncare = 1;                                                  //pentru a ține minte valoarea ultimului coș marcat, în cazul în care se decide anularea lui
-          SerialBT.printf("%d", scor);                                          //se trimite prin Bluetooth noua valoare
+          SerialBT.printf("%d/",scor);                                                  //se trimite prin Bluetooth noua valoare
+          
           break;                                                                //se iese din while pentru că s-a actualizat scorul
         }
         if(comandă_curentă == 'S')                                              //timpul merge, deci se pot înscrie 2 sau 3 puncte
@@ -141,7 +142,8 @@ void loop()                                     //metodă ce se execută, în bu
             scor = scor+3;                                                      //dacă distanța e mai mare, atunci coșul valorează 3 puncte
             ultima_aruncare = 3;                                                //pentru a ține minte valoarea ultimului coș marcat, în cazul în care se decide anularea lui
           }
-          SerialBT.printf("%d", scor);                                          //se trimte scorul actualizat prin Bluetooth
+          SerialBT.printf("%d/",scor);                                          //se trimte scorul actualizat prin Bluetooth
+          
           break;
         }
       }
@@ -155,6 +157,7 @@ void loop()                                     //metodă ce se execută, în bu
     ultima_aruncare = 0;                                                        //ultima aruncare se face 0 pentru a nu permite ștergerea multiplă, din greșeală
  }
   
-  SerialBT.printf("%d", scor);                                                  //trimiterea în permanență a scorului
+  SerialBT.printf("%d/",scor);                                                  //trimiterea în permanență a scorului
+
   delay(50);                                                                    //o mică întârziere, pentru a se procesa informația
 }

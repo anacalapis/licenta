@@ -119,7 +119,8 @@ void loop()
         {
           score++;
           ultima_aruncare = 1;
-          SerialBT.printf("%d", score);
+        SerialBT.printf("%d*",score);
+          //Serial.println(score);
           break;
         }
         if(comanda == 'S')
@@ -136,7 +137,8 @@ void loop()
             score = score+3;
             ultima_aruncare = 3;
           }
-          SerialBT.printf("%d", score);
+          SerialBT.printf("%d*",score);
+          //Serial.println(score);
           break;
         }
       }
@@ -149,6 +151,7 @@ void loop()
     scor_delete = score;
     ultima_aruncare = 0;
   }
-  SerialBT.printf("%d", score);
+  SerialBT.printf("%d*",score);
+  //Serial.println(score);
   delay(50); 
 }
