@@ -1,47 +1,27 @@
-#include "BluetoothSerial.h"
-#include "esp_bt_device.h"
-
-String device_name = "ESP32-BT-Slave";
-
-
-// Check if Bluetooth is available
-#if !defined(CONFIG_BT_ENABLED) || !defined(CONFIG_BLUEDROID_ENABLED)
-#error Bluetooth is not enabled! Please run make menuconfig to and enable it
-#endif
-
-// Check Serial Port Profile
-#if !defined(CONFIG_BT_SPP_ENABLED)
-#error Serial Port Profile for Bluetooth is not available or not enabled. It is only available for the ESP32 chip.
-#endif
-
+#include "esp_bt_device.h"                                                  //pentru a folosi funcții necesare la obținerea adresei MAC
+#include <BluetoothSerial.h>                                                //pentru a găsi adresa MAC destrinată comunicării prin Bluetooth
 BluetoothSerial SerialBT;
-void printDeviceAddress() {
-  const uint8_t* mac = esp_bt_dev_get_address();
-  Serial.print("Device MAC Address: ");
-  for (int i = 0; i < 6; i++) {
-    Serial.print(mac[i], HEX);
-    if (i < 5) Serial.print(":");
+
+void adresa_MAC() 
+{
+  const uint8_t* adresa_mac = esp_bt_dev_get_address();                     //se obține adresa MAC a dispozitivului
+  Serial.print("Adresa MAC: ");
+  for (int i = 0; i < 6; i++)                                               //pentru ca rezultatul a celor 6 bytes nu este formatat, urmează să fie afișat corespunzător
+  {
+    Serial.print(adresa_mac[i], HEX);                                       //fiecare byte va fi afișat în format zecimal dacă nu se specifică prin intermediul parametrului HEX că se dorește
+    if (i < 5)                                                              //să fie vizualizat în format hexazecimal
+    {
+      Serial.print(":");                                                    //pentru a respecta formatul corect al unei adresa MAC, se pun : între fiecare pereche de bytes
+    }
   }
   Serial.println();
 }
 
 void setup() {
-  Serial.begin(115200);
-  SerialBT.begin(device_name);  //Bluetooth device name
-  //SerialBT.deleteAllBondedDevices(); // Uncomment this to delete paired devices; Must be called after begin
-  Serial.printf("The device with name \"%s\" is started.\nNow you can pair it with Bluetooth!\n", device_name.c_str());
-  Serial.printf("MAC : ");
-  printDeviceAddress();
-  Serial.println();
- 
+  Serial.begin(115200);                                                     //se setează comunicarea serială la 9600 biți pe secundă
+  delay(1000);                                                              //se adaugă o întârziere
+  SerialBT.begin("ESP32");                                                  //se inițializează stivă Bluetooth pentru a putea apela funcția ce urmează 
+  adresa_MAC();                                                             //se apelează, o singură dată, funcția pentru afișarea adresei MAC
 }
 
-void loop() {
-  if (Serial.available()) {
-    SerialBT.write(Serial.read());
-  }
-  if (SerialBT.available()) {
-    Serial.write(SerialBT.read());
-  }
-  delay(20);
-}
+void loop() { }                                                             //scopul acestui program este pentru a obține adresa MAC a fiecărui dispozitiv

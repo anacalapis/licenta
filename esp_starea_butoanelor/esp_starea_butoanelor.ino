@@ -1,53 +1,43 @@
-#include <BluetoothSerial.h>
+#include <BluetoothSerial.h>                                //bibliotecă necesară pentru a se putea realiza comunicarea prin intermediul protocolului de comunicație Bluetooth
 
-BluetoothSerial SerialBT; // Obiect pentru comunicare Bluetooth
+BluetoothSerial Com_Bluetooth;                              //obiectul folosit pentru comunicare datelor prin intermediul Bluetoothu-lui
 
-#define MIC_PIN 23 // Pinul la care este conectat microfonul
-#define RESUME_BUTTON 22
-#define DELETE_POINTS 19
+#define PIN_MICROFON 23                                     //pinul digital la care este conectat microfonul
+#define PIN_BUTON_START 22                                  //pinul digital la care este conectat butonul prin care se pornește cronometrul de joc
+#define PIN_BUTON_STERGERE 19                               //pinul digital la care este conectat butonul care este responsabil de ștergerea ultimului coș
 
-
-int flag=0;
-void setup() {
-  pinMode(MIC_PIN, INPUT); // Configurare buton cu pull-up intern
-  pinMode(RESUME_BUTTON, INPUT_PULLUP);
-  pinMode(DELETE_POINTS, INPUT_PULLUP);
-  Serial.begin(9600); // Inițializare Serial Monitor
-  SerialBT.begin("ESP32_Button_Sender"); // Numele dispozitivului Bluetooth
+void setup()                                                //funcție ce se execută o singură dată, la începutul execuției programului, și este responsabilă de inițializări
+{
+  pinMode(PIN_MICROFON, INPUT);                             //configurează pinul digital al microfonului ca și pin de intrare
+  pinMode(PIN_BUTON_START, INPUT_PULLUP);                   //configurează pinii digitali la care sunt conectate butoanele de pornire a timpului și cel de ștergere al ultimului coș 
+  pinMode(PIN_BUTON_STERGERE, INPUT_PULLUP);                //ca fiind de intrare, la care se activează și rezistența internă de pull-up pentru ca pinii să se afle într-o stare definită
+                                                            //și atunci când nu transmit semnale
+  Com_Bluetooth.begin("ESP32_Modul_timp");                  //numele dispozitivului care va apărea pe Raspberry în momentul în care se realizează conexiunea 
 }
 
-void loop() {
-  // Citește starea butonului
-  int microphone = digitalRead(MIC_PIN);
-  int resume_button = digitalRead(RESUME_BUTTON);
-  int delete_points = digitalRead(DELETE_POINTS);
+void loop()                                                 //funcție ce se execută la infinit pentru a detecta semnalele necesare
+{
+  int microfon = digitalRead(PIN_MICROFON);                 //se citește starea microfonului dacă s-a depășit sau nu pragul setat prin intermediul potențiometrului
+  int buton_start = digitalRead(PIN_BUTON_START);           //se citește starea butonului de start
+  int buton_stergere = digitalRead(PIN_BUTON_STERGERE);     //se citește starea butonului de ștergere a ultimelor puncte marcate
 
-  if(microphone == HIGH)
+  if(microfon == HIGH)                                      //dacă microfonul a înregistrat o valoare mai mare decât cea setată
   {
-    SerialBT.print("1");
-    //Serial.print("1");
+    Com_Bluetooth.print("1");                               //asta înseamnă că arbitrul a fluierat, deci se oprește timpul și se trimite mesajul aferent prin Bluetooth
   }
   else 
   {
-    if (resume_button == LOW) 
+    if (buton_start == LOW)                                 //dacă s-a apăsat butonul de start a timpului
     {
-      SerialBT.print("0");
-      //Serial.println("0");
+      Com_Bluetooth.print("0");                             //se trimite mesajul aferent pentru a porni timpul de joc
     }
     else
     {
-      if(delete_points == LOW)
+      if(buton_stergere == LOW)                             //dacă s-a apăsat butonul de ștergere al ultimului coș 
       {
-        SerialBT.print("4");
-        //Serial.print("4");
+        Com_Bluetooth.print("2");                           //se trimite mesajul stabilit pentru a se acționa corespunzător
       }
-      // else
-      // {
-      //   SerialBT.print("2");
-      // }
-    }
-      
+    }   
   }
-
-  delay(10);
+  delay(10);                                                //se introduce o întârziere de 10 milisecunde în care nu se întâmplă nimic, după care se reia de la început codul din funcția loop
 }

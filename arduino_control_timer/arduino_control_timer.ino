@@ -1,11 +1,11 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-#define NR_SEC_SFERT 15   //aici se pune cat dorim sa tina un sfert in secunde
+#define NR_SEC_SFERT 60   //aici se pune cat dorim sa tina un sfert in secunde
 #define NR_SEC_PAUZA_MICA 3 //aici se pune cat dorim sa tina o pauza mica in secunde
 #define NR_SEC_PAUZA_MARE 5 //aici se pune cat dorim sa tina o pauza mare in secunde
 #define NR_SEC_OVERTIME 10
-#define NR_SEC_ULTIMELE_2_MIN_MECI 10
+
 
 LiquidCrystal_I2C lcd(0x27, 16, 2); 
 
@@ -18,8 +18,7 @@ int timeIntervalCount =0; //numara in ce interval ne aflam, par este sfert, impa
 int nr_sfert=1;
 int nr_overtime =0;
 bool overtime = false;
-bool ultimele_2_min = false;
-bool last_2_min=false;
+
 int countDownTime = NR_SEC_SFERT; //in secunde
 int timeQuarter =NR_SEC_SFERT ;
 int timeOvertime = NR_SEC_OVERTIME;
@@ -87,7 +86,6 @@ void loop() {
         while(curent_scor1 == curent_scor2)
         {
           overtime = true;
-          ultimele_2_min = false;
           countDownTime = NR_SEC_PAUZA_MICA;
           displayPause();
 
@@ -214,23 +212,23 @@ void displayQuarter()
     {
       command = Serial.readStringUntil('\n');
       command.trim();
-      if (command.equals("04") && buton_stergere ==false) 
+      if (command.equals("02") && buton_stergere ==false) 
       {
         if(ultim_scor_marcat == 1)
         {
           Serial.println("A");
-          //ultim_scor_marcat = 1;
+          ultim_scor_marcat = 1;
         }
         if(ultim_scor_marcat == 2 )
         {
           Serial.println("B");
-          //ultim_scor_marcat =2;
+          ultim_scor_marcat =2;
         }
         delay(100); 
-        //displayScor();
+        displayScor();
         buton_stergere=true;
       }
-      displayScor();
+      // displayScor();
     }
     buton_stergere=true;
   }
@@ -239,25 +237,6 @@ void displayQuarter()
     command = Serial.readStringUntil('\n');
     command.trim();
     //if (digitalRead(pauseButton) == LOW)
-    if(last_2_min==true)
-    {
-      isPaused = true; 
-      while(!command.equals("00"))    // e inceput de sfert si se asteapta ca timpul sa porneasca
-      {
-        command = Serial.readStringUntil('\n');
-        command.trim();
-        isPaused = false;
-        last_2_min=false;
-        displayScor();
-        if(command.equals("01"))   //
-        {
-          Serial.println("L");
-          isPaused = true; // Oprește timpul 
-          delay(100);
-          break;
-        }
-      }
-    }
     if(command.equals("01"))
     {
       Serial.println("L");
@@ -280,10 +259,6 @@ void displayQuarter()
       {
         previousMillis = currentMillis; // Actualizează timpul anterior
         countDownTime--; // Scade timpul rămas
-        if((nr_sfert==4 || overtime==true) &&  countDownTime<NR_SEC_ULTIMELE_2_MIN_MECI)
-        {
-          ultimele_2_min=true;
-        }
         if(overtime)
         {
           updateDisplay(nr_overtime); 
@@ -297,7 +272,7 @@ void displayQuarter()
     }
     else  //suntem in perioada aruncarilor libere
     {
-      if (command.equals("04")) 
+      if (command.equals("02")) 
       {
         if(ultim_scor_marcat == 1)
         {
@@ -379,7 +354,7 @@ void displayPause()
     unsigned long currentMillis = millis();
     command = Serial.readStringUntil('\n');
     command.trim();
-    if (command.equals("04") && buton_stergere ==false) 
+    if (command.equals("02") && buton_stergere ==false) 
     {
       //Serial.println("D");
       if(ultim_scor_marcat == 1)
@@ -397,6 +372,7 @@ void displayPause()
       displayScor();
       buton_stergere=true;
     }
+    displayScor();
     if (currentMillis - previousMillis >= interval && countDownTime > 0) 
     {
       previousMillis = currentMillis; // Actualizează timpul anterior
@@ -416,12 +392,8 @@ void displayScor()
       String  scor_nr= command.substring(1, stop);
       curent_scor1 =scor_nr.toInt();
       //delay(100);
-      if(anterior_scor1 < curent_scor1) 
+      if(anterior_scor1 != curent_scor1) 
       {
-        if(ultimele_2_min==true)
-        {
-          last_2_min=true;
-        }
         ultim_scor_marcat =1;
       }
       anterior_scor1=curent_scor1;
@@ -431,12 +403,8 @@ void displayScor()
       int stop= command.indexOf('/');
       String  scor_nr= command.substring(1, stop);
       curent_scor2 =scor_nr.toInt();
-      if(anterior_scor2 < curent_scor2)      //dif sa fie<=3
+      if(anterior_scor2 != curent_scor2)      //dif sa fie<=3
       {
-        if(ultimele_2_min==true)
-        {
-          last_2_min=true;
-        }
         ultim_scor_marcat =2;
       }
       anterior_scor2=curent_scor2;
