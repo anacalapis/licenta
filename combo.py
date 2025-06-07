@@ -1,8 +1,8 @@
-import depthai as dai
-import cv2
-import numpy as np
-import math
-import threading 
+import depthai as dai       #inclusă pentru obținerea fluxurilor video
+import cv2                  #capturarea și filtrarea imaginilor
+import numpy as np          #pentru calcule numerice ce țin de filtrarea culorii
+import math                 #pentru funcția matematică sqrt care este folosită pentru calcularea distanțelor
+import threading            #pentru crarea acelui „lacăt” ca să nu se poată scrie și citi simultan din fișierul text
 
 #variabilele de mai jos sunt explicate în funcția de mai jos, acolo unde sunt și folosite
 conturare_obiect = False
@@ -193,7 +193,7 @@ with dai.Device(pipeline) as device:                                            
                     yMax = min(matrice_adancime.shape[0] - 1, pct_adancime_Y + zona)    #ne asigurăm că nu mergem prea jos
                     
                     regiune_adancime = matrice_adancime[yMin:yMax, xMin:xMax]           #se extrage zona de adâncime a pătratului definit mai sus
-                    
+                        
                     regiune_adancime_corect = regiune_adancime[regiune_adancime > 0]    #păstrează distanțele corecte, cele care au 0 înseamnă că nu au nicio dată
                     
                     if len(regiune_adancime_corect) > 0:                                #dacă există astfel de date
