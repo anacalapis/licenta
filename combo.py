@@ -1,8 +1,8 @@
-import depthai as dai       #inclusă pentru obținerea fluxurilor video
-import cv2                  #capturarea și filtrarea imaginilor
-import numpy as np          #pentru calcule numerice ce țin de filtrarea culorii
-import math                 #pentru funcția matematică sqrt care este folosită pentru calcularea distanțelor
-import threading            #pentru crarea acelui „lacăt” ca să nu se poată scrie și citi simultan din fișierul text
+import depthai as dai
+import cv2
+import numpy as np
+import math
+import threading 
 
 #variabilele de mai jos sunt explicate în funcția de mai jos, acolo unde sunt și folosite
 conturare_obiect = False
@@ -142,7 +142,7 @@ with dai.Device(pipeline) as device:                                            
     while True:
         cadru_RGB = coada_RGB.get()                                                     #se ia un cadru din coada de așteptare pentru cadrele ce oferă imagini RGB
         cadru_adâncime = coada_adancime.get()                                           #se ia un cadru din coada de așteptare a hărții de adâncime
-        
+
         cadru_BGR = cadru_RGB.getCvFrame()                                              #se obține un cadru compatibil cu OpenCV, imaginea RGB este transformată în BGR
         matrice_adancime = cadru_adâncime.getFrame()                                    #se extrage doar imaginea de adâncime, sub formă de matrice 2D
 
@@ -193,7 +193,7 @@ with dai.Device(pipeline) as device:                                            
                     yMax = min(matrice_adancime.shape[0] - 1, pct_adancime_Y + zona)    #ne asigurăm că nu mergem prea jos
                     
                     regiune_adancime = matrice_adancime[yMin:yMax, xMin:xMax]           #se extrage zona de adâncime a pătratului definit mai sus
-                        
+                    
                     regiune_adancime_corect = regiune_adancime[regiune_adancime > 0]    #păstrează distanțele corecte, cele care au 0 înseamnă că nu au nicio dată
                     
                     if len(regiune_adancime_corect) > 0:                                #dacă există astfel de date
@@ -210,7 +210,7 @@ with dai.Device(pipeline) as device:                                            
                         cv2.putText(clona, text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)   #este scris pe imagine
         
         cv2.imshow("Imagine camera", clona)                       #afișarea imaginii după toate operațiile și calculele făcute
-        
+
         tasta = cv2.waitKey(1)                                    #se așteapta ca o tastă să fie apăsată
         if tasta == ord('q'):                                     #dacă se apasă q, atunci programul se va încheia
             break
