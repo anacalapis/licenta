@@ -94,7 +94,7 @@ lungime_img = 1280                                                              
 latime_img = 720                                                                    #lățimea imagini în funcție de numărul de pixeli
 
 fx = 1050                                                                           #distanța focală în pixeli
-fy = 1050
+fy = 1050                                                                           #determinată în mod experimental pentru a obține date cât mai apropiate de adevăr
 centru_img_X = lungime_img / 2                                                      #coordonata X a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
 centru_img_Y = latime_img / 2                                                       #coordonata Y a centrului imaginii, folosită pe mai departe ca și origine a celor 3 axe
 

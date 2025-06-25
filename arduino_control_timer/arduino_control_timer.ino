@@ -10,7 +10,7 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);           //se va conecta obiectul lcd la ad
 
 volatile bool e_pauza = false;                //variabilă ce se ocupă de oprirea timpului de joc și indică dacă este pauză (volatile pt a-i putea modifica valoarea și în afara funcție loop)
 unsigned long timp_anterior = 0;              //variabilă ce reține ultima măsurătoare a timpului
-unsigned long timp_curent =0;                 //variabila curentă folosită pentru determinarea timpului
+//unsigned long timp_curent =0;                 //variabila curentă folosită pentru determinarea timpului
 const unsigned long interval = 1000;          //interval folosit pentru scăderea timpului de pe tabelă (1 secundă)
 int interval_joc_curent =0;                   //numara in ce interval ne aflam, par este sfert, impar pauza
 int nr_sfert=0;                               //numărul sfertului de joc
@@ -200,6 +200,8 @@ void interpretare_sfert()                     //gestoionarea tuturor evenimentel
           Serial.println("B");                //se trimite un mesaj pe serial, pentru a se efectua ștergerea în cadrul modulului ce se ocupă de panoul 2
           ultim_scor_marcat =2;
         }
+	      delay(100); 
+        afisare_scor();
         buton_stergere=true;                  //dacă s-a efectuat o ștergere, variabila se pune pe True pentru a nu se permite ștergerea și de la cealaltă echipă
       }
       afisare_scor();                         //se afișează scorul actualizat
@@ -226,7 +228,7 @@ void interpretare_sfert()                     //gestoionarea tuturor evenimentel
     }
     if (!e_pauza)                             //timpul de joc din timpul sfertului merge
     {
-      timp_curent = millis();                 //se ia timpul curent pentru a știi când a trecut o secundă pentru a se actualiza și pe tabelă            
+      unsigned long timp_curent = millis();                 //se ia timpul curent pentru a știi când a trecut o secundă pentru a se actualiza și pe tabelă            
       if (timp_curent - timp_anterior >= interval && timp > 0)  //dacă a trecut o secundă, iar timpul nu a ajuns la final
       {
         timp_anterior = timp_curent;          //se actualizează timpul anterior
@@ -320,7 +322,7 @@ void afisare_pauza()                          //se afișează pauza
   buton_stergere=false;                       //se permite ștergerea ultimelor puncte marcat pe parcursul pauzei
   while(timp!=0)                              //dacă pauza este în derulare
   {
-    timp_curent = millis();                   //se ia timpul curent pentru a știi când a trecut o secundă pentru a se actualiza și pe tabelă 
+    unsigned long timp_curent = millis();                   //se ia timpul curent pentru a știi când a trecut o secundă pentru a se actualiza și pe tabelă 
     comanda = Serial.readStringUntil('\n');   //se citește de pe portul serial un șir de caractere până la apariția caracterului de linie nouă '\n'
     comanda.trim();                           //se elimină spațiile albe de la începutul și finalul mesajului
     if (comanda.equals("02") && buton_stergere ==false)   //dacă se apasă pentru prima dată pe butonul de ștergere
