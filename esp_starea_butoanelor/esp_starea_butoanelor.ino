@@ -41,3 +41,5 @@ void loop()                                                 //funcție ce se exe
   }
   delay(10);                                                //se introduce o întârziere de 10 milisecunde în care nu se întâmplă nimic, după care se reia de la început codul din funcția loop
 }
+
+//VERSIUNEA FINALA

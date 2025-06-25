@@ -150,3 +150,5 @@ void loop()                                     //metodă ce se execută, în bu
 
   delay(50);                                                                    //o mică întârziere, pentru a se procesa informația
 }
+
+//VERSIUNEA FINALA

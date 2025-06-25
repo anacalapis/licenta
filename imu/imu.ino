@@ -144,3 +144,5 @@ float maxim_vector(float vector[])            //funcție care returnează valoar
   }
   return maxim;                               //se returnează valoarea maximă din cadrul vectorului
 }
+
+//VERSIUNEA FINALA

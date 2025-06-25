@@ -10,7 +10,6 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);           //se va conecta obiectul lcd la ad
 
 volatile bool e_pauza = false;                //variabilă ce se ocupă de oprirea timpului de joc și indică dacă este pauză (volatile pt a-i putea modifica valoarea și în afara funcție loop)
 unsigned long timp_anterior = 0;              //variabilă ce reține ultima măsurătoare a timpului
-//unsigned long timp_curent =0;                 //variabila curentă folosită pentru determinarea timpului
 const unsigned long interval = 1000;          //interval folosit pentru scăderea timpului de pe tabelă (1 secundă)
 int interval_joc_curent =0;                   //numara in ce interval ne aflam, par este sfert, impar pauza
 int nr_sfert=0;                               //numărul sfertului de joc
@@ -417,3 +416,5 @@ void afisare_scor()                         //se citește de pe serial scorul î
  }
   lcd.print(" EchB");                       //se afișează echipa B
 }
+
+//VERSIUNEA FINALA
