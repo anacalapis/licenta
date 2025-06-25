@@ -25,3 +25,5 @@ void setup() {
 }
 
 void loop() { }                                                             //scopul acestui program este pentru a obține adresa MAC a fiecărui dispozitiv
+
+//VERSIUNEA FINALA
