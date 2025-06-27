@@ -31,7 +31,7 @@ https://github.com/anacalapis/licenta
 | program_principal.py      | lansarea în paralel a mai multor funcții, pentru sincronizarea execuției programului         |
 
 ## Crearea mediului de lucru
-* Datorită faptului că cele două fișiere sunt scrise în Python, avem nevoie,prima dată, de instalarea acestuia.
+* Datorită faptului că cele două fișiere sunt scrise în Python, avem nevoie, prima dată, de instalarea acestuia.
     * `sudo apt install python3` - se instalează Python 3
 * Pentru a nu avea probleme, se recomandă crearea și utilizarea unui mediu virtual:
     * `sudo apt install python3-venv` - instalare necesară pentru a putea crea un mediu virtual
